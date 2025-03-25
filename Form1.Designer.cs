@@ -34,7 +34,13 @@
             button_home = new Button();
             button_status = new Button();
             button_activity = new Button();
+            panel_activity = new Panel();
+            panel_status = new Panel();
+            panel_home = new Panel();
+            panel_trips = new Panel();
+            panel_profile = new Panel();
             panel1.SuspendLayout();
+            panel_activity.SuspendLayout();
             SuspendLayout();
             // 
             // panel1
@@ -58,7 +64,7 @@
             button_profile.Name = "button_profile";
             button_profile.Size = new Size(54, 46);
             button_profile.TabIndex = 4;
-            button_profile.Text = "button5";
+            button_profile.Text = "Profile";
             button_profile.UseVisualStyleBackColor = true;
             // 
             // button_trips
@@ -68,7 +74,7 @@
             button_trips.Name = "button_trips";
             button_trips.Size = new Size(56, 46);
             button_trips.TabIndex = 3;
-            button_trips.Text = "button4";
+            button_trips.Text = "Trips";
             button_trips.UseVisualStyleBackColor = true;
             // 
             // button_home
@@ -78,7 +84,7 @@
             button_home.Name = "button_home";
             button_home.Size = new Size(53, 46);
             button_home.TabIndex = 2;
-            button_home.Text = "button3";
+            button_home.Text = "Home";
             button_home.UseVisualStyleBackColor = true;
             // 
             // button_status
@@ -88,7 +94,7 @@
             button_status.Name = "button_status";
             button_status.Size = new Size(54, 46);
             button_status.TabIndex = 1;
-            button_status.Text = "button2";
+            button_status.Text = "Status";
             button_status.UseVisualStyleBackColor = true;
             // 
             // button_activity
@@ -98,18 +104,65 @@
             button_activity.Name = "button_activity";
             button_activity.Size = new Size(55, 46);
             button_activity.TabIndex = 0;
-            button_activity.Text = "button1";
+            button_activity.Text = "Activity";
             button_activity.UseVisualStyleBackColor = true;
+            // 
+            // panel_activity
+            // 
+            panel_activity.Controls.Add(panel_status);
+            panel_activity.Dock = DockStyle.Fill;
+            panel_activity.Location = new Point(0, 0);
+            panel_activity.Name = "panel_activity";
+            panel_activity.Size = new Size(265, 438);
+            panel_activity.TabIndex = 1;
+            // 
+            // panel_status
+            // 
+            panel_status.Dock = DockStyle.Fill;
+            panel_status.Location = new Point(0, 0);
+            panel_status.Name = "panel_status";
+            panel_status.Size = new Size(265, 438);
+            panel_status.TabIndex = 0;
+            // 
+            // panel_home
+            // 
+            panel_home.Dock = DockStyle.Fill;
+            panel_home.Location = new Point(0, 0);
+            panel_home.Name = "panel_home";
+            panel_home.Size = new Size(265, 438);
+            panel_home.TabIndex = 2;
+            // 
+            // panel_trips
+            // 
+            panel_trips.Dock = DockStyle.Fill;
+            panel_trips.Location = new Point(0, 0);
+            panel_trips.Name = "panel_trips";
+            panel_trips.Size = new Size(265, 438);
+            panel_trips.TabIndex = 3;
+            // 
+            // panel_profile
+            // 
+            panel_profile.Dock = DockStyle.Fill;
+            panel_profile.Location = new Point(0, 0);
+            panel_profile.Name = "panel_profile";
+            panel_profile.Size = new Size(265, 438);
+            panel_profile.TabIndex = 4;
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(265, 484);
+            Controls.Add(panel_profile);
+            Controls.Add(panel_trips);
+            Controls.Add(panel_home);
+            Controls.Add(panel_activity);
             Controls.Add(panel1);
+            FormBorderStyle = FormBorderStyle.Fixed3D;
             Name = "Form1";
-            Text = "Form1";
+            Text = "Piper Auto Start";
             panel1.ResumeLayout(false);
+            panel_activity.ResumeLayout(false);
             ResumeLayout(false);
         }
 
@@ -121,5 +174,10 @@
         private Button button_home;
         private Button button_status;
         private Button button_activity;
+        private Panel panel_activity;
+        private Panel panel_status;
+        private Panel panel_home;
+        private Panel panel_trips;
+        private Panel panel_profile;
     }
 }

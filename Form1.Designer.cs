@@ -66,6 +66,7 @@
             button_profile.TabIndex = 4;
             button_profile.Text = "Profile";
             button_profile.UseVisualStyleBackColor = true;
+            button_profile.Click += button_profile_Click;
             // 
             // button_trips
             // 
@@ -76,6 +77,7 @@
             button_trips.TabIndex = 3;
             button_trips.Text = "Trips";
             button_trips.UseVisualStyleBackColor = true;
+            button_trips.Click += button_trips_Click;
             // 
             // button_home
             // 
@@ -86,6 +88,7 @@
             button_home.TabIndex = 2;
             button_home.Text = "Home";
             button_home.UseVisualStyleBackColor = true;
+            button_home.Click += button_home_Click;
             // 
             // button_status
             // 
@@ -96,6 +99,7 @@
             button_status.TabIndex = 1;
             button_status.Text = "Status";
             button_status.UseVisualStyleBackColor = true;
+            button_status.Click += button_status_Click;
             // 
             // button_activity
             // 
@@ -106,6 +110,7 @@
             button_activity.TabIndex = 0;
             button_activity.Text = "Activity";
             button_activity.UseVisualStyleBackColor = true;
+            button_activity.Click += button_activity_Click;
             // 
             // panel_activity
             // 

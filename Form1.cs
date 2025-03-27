@@ -1,7 +1,13 @@
+using System.Drawing.Imaging;
+using System.Windows.Forms;
+
 namespace WinFormsCarStarter
 {
     public partial class Form1 : Form
     {
+        private ImageList imageList = new ImageList();
+        private ImageList active_imageList = new ImageList();
+
         public Form1()
         {
             InitializeComponent();
@@ -49,6 +55,11 @@ namespace WinFormsCarStarter
             imageList.Images.Add("home", Image.FromFile("icons\\home.png"));
             imageList.Images.Add("trips", Image.FromFile("icons\\nav.png"));
             imageList.Images.Add("profile", Image.FromFile("icons\\profile.png"));
+            imageList.Images.Add("activated activity", Image.FromFile("icons\\active_activity.png"));
+            imageList.Images.Add("activated status", Image.FromFile("icons\\active_status.png"));
+            imageList.Images.Add("activated home", Image.FromFile("icons\\active_house.png"));
+            imageList.Images.Add("activated trips", Image.FromFile("icons\\active_nav.png"));
+            imageList.Images.Add("activated profile", Image.FromFile("icons\\active_profile.png"));
 
             button_activity.ImageList = imageList;
             button_status.ImageList = imageList;
@@ -72,8 +83,9 @@ namespace WinFormsCarStarter
             ShowTab(panel_home);
         }
 
+        /************** GLOBAL METHODS *************/
         // ShowTab -- makes the tab (panel) visible depending on which button is clicked
-        private void ShowTab (Panel visibleTab)
+        private void ShowTab(Panel visibleTab)
         {
             // Hide all tabs
             panel_activity.Visible = false;
@@ -84,6 +96,72 @@ namespace WinFormsCarStarter
 
             // Show parameter tab
             visibleTab.Visible = true;
+        }
+
+
+        /******************* BUTTON METHODS ************************/
+        // ActiveTab -- shows the user what tab they are currently on 
+        private void ActiveTab (Button activeTab)
+        {
+            // Set all tabs text one color
+            button_activity.ForeColor = Color.Black;
+            button_status.ForeColor = Color.Black;
+            button_home.ForeColor = Color.Black;
+            button_trips.ForeColor = Color.Black;
+            button_profile.ForeColor = Color.Black;
+
+            // Set all icons to one color
+            button_activity.ImageIndex = 0;
+            button_status.ImageIndex = 1;
+            button_home.ImageIndex = 2;
+            button_trips.ImageIndex = 3;
+            button_profile.ImageIndex = 4;
+
+
+            // Set active text color
+            activeTab.ForeColor = Color.MediumPurple;
+
+            // Change the icon of the active button
+            if (activeTab == button_activity)
+                button_activity.ImageIndex = 5;
+            else if (activeTab == button_status)
+                button_status.ImageIndex = 6;
+            else if (activeTab == button_home)
+                button_home.ImageIndex = 7;
+            else if (activeTab == button_trips)
+                button_trips.ImageIndex = 8;
+            else if (activeTab == button_profile)
+                button_profile.ImageIndex = 9;
+        }
+
+        private void button_activity_Click(object sender, EventArgs e)
+        {
+            ShowTab(panel_activity);
+            ActiveTab(button_activity);
+        }
+
+        private void button_status_Click(object sender, EventArgs e)
+        {
+            ShowTab(panel_status);
+            ActiveTab(button_status);
+        }
+
+        private void button_home_Click(object sender, EventArgs e)
+        {
+            ShowTab(panel_home);
+            ActiveTab(button_home);
+        }
+
+        private void button_trips_Click(object sender, EventArgs e)
+        {
+            ShowTab(panel_trips);
+            ActiveTab(button_trips);
+        }
+
+        private void button_profile_Click(object sender, EventArgs e)
+        {
+            ShowTab(panel_profile);
+            ActiveTab(button_profile); 
         }
     }
 }

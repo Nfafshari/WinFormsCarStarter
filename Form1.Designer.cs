@@ -172,5 +172,17 @@
         }
 
         #endregion
+
+        private Panel panel1;
+        private Button button_profile;
+        private Button button_trips;
+        private Button button_home;
+        private Button button_status;
+        private Button button_activity;
+        private Panel panel_activity;
+        private Panel panel_status;
+        private Panel panel_home;
+        private Panel panel_trips;
+        private Panel panel_profile;
     }
 }

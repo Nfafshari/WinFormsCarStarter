@@ -134,6 +134,7 @@ namespace WinFormsCarStarter
                 button_profile.ImageIndex = 9;
         }
 
+        // button_activity_Click -- controller for when activity button is clicked
         private void button_activity_Click(object sender, EventArgs e)
         {
             ShowTab(panel_activity);

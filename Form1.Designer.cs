@@ -36,11 +36,23 @@
             button_activity = new Button();
             panel_activity = new Panel();
             panel_status = new Panel();
+            panel_profile = new Panel();
             panel_home = new Panel();
             panel_trips = new Panel();
-            panel_profile = new Panel();
+            panel_diagnostics = new Panel();
+            pictureBox_battery = new PictureBox();
+            pictureBox_connection = new PictureBox();
+            pictureBox_wifi = new PictureBox();
+            panel2 = new Panel();
+            panel_tabContainer = new Panel();
             panel1.SuspendLayout();
             panel_activity.SuspendLayout();
+            panel_trips.SuspendLayout();
+            panel_diagnostics.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pictureBox_battery).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)pictureBox_connection).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)pictureBox_wifi).BeginInit();
+            panel_tabContainer.SuspendLayout();
             SuspendLayout();
             // 
             // panel1
@@ -115,10 +127,11 @@
             // panel_activity
             // 
             panel_activity.Controls.Add(panel_status);
+            panel_activity.Controls.Add(panel_profile);
             panel_activity.Dock = DockStyle.Fill;
             panel_activity.Location = new Point(0, 0);
             panel_activity.Name = "panel_activity";
-            panel_activity.Size = new Size(265, 438);
+            panel_activity.Size = new Size(265, 415);
             panel_activity.TabIndex = 1;
             // 
             // panel_status
@@ -126,48 +139,105 @@
             panel_status.Dock = DockStyle.Fill;
             panel_status.Location = new Point(0, 0);
             panel_status.Name = "panel_status";
-            panel_status.Size = new Size(265, 438);
+            panel_status.Size = new Size(265, 415);
             panel_status.TabIndex = 0;
+            // 
+            // panel_profile
+            // 
+            panel_profile.Location = new Point(6, 174);
+            panel_profile.Name = "panel_profile";
+            panel_profile.Size = new Size(265, 170);
+            panel_profile.TabIndex = 4;
             // 
             // panel_home
             // 
-            panel_home.Dock = DockStyle.Fill;
-            panel_home.Location = new Point(0, 0);
+            panel_home.Location = new Point(3, 161);
             panel_home.Name = "panel_home";
-            panel_home.Size = new Size(265, 438);
+            panel_home.Size = new Size(265, 193);
             panel_home.TabIndex = 2;
             // 
             // panel_trips
             // 
-            panel_trips.Dock = DockStyle.Fill;
-            panel_trips.Location = new Point(0, 0);
+            panel_trips.Controls.Add(panel_home);
+            panel_trips.Location = new Point(6, 30);
             panel_trips.Name = "panel_trips";
-            panel_trips.Size = new Size(265, 438);
+            panel_trips.Size = new Size(262, 180);
             panel_trips.TabIndex = 3;
             // 
-            // panel_profile
+            // panel_diagnostics
             // 
-            panel_profile.Dock = DockStyle.Fill;
-            panel_profile.Location = new Point(0, 0);
-            panel_profile.Name = "panel_profile";
-            panel_profile.Size = new Size(265, 438);
-            panel_profile.TabIndex = 4;
+            panel_diagnostics.Controls.Add(pictureBox_battery);
+            panel_diagnostics.Controls.Add(pictureBox_connection);
+            panel_diagnostics.Controls.Add(pictureBox_wifi);
+            panel_diagnostics.Controls.Add(panel2);
+            panel_diagnostics.Location = new Point(0, -1);
+            panel_diagnostics.Name = "panel_diagnostics";
+            panel_diagnostics.Size = new Size(265, 24);
+            panel_diagnostics.TabIndex = 0;
+            // 
+            // pictureBox_battery
+            // 
+            pictureBox_battery.Anchor = AnchorStyles.None;
+            pictureBox_battery.Location = new Point(240, 5);
+            pictureBox_battery.Margin = new Padding(0);
+            pictureBox_battery.Name = "pictureBox_battery";
+            pictureBox_battery.Size = new Size(22, 16);
+            pictureBox_battery.TabIndex = 3;
+            pictureBox_battery.TabStop = false;
+            // 
+            // pictureBox_connection
+            // 
+            pictureBox_connection.Anchor = AnchorStyles.None;
+            pictureBox_connection.Location = new Point(220, 10);
+            pictureBox_connection.Margin = new Padding(0);
+            pictureBox_connection.Name = "pictureBox_connection";
+            pictureBox_connection.Size = new Size(16, 12);
+            pictureBox_connection.TabIndex = 2;
+            pictureBox_connection.TabStop = false;
+            // 
+            // pictureBox_wifi
+            // 
+            pictureBox_wifi.Location = new Point(205, 5);
+            pictureBox_wifi.Name = "pictureBox_wifi";
+            pictureBox_wifi.Size = new Size(15, 15);
+            pictureBox_wifi.TabIndex = 1;
+            pictureBox_wifi.TabStop = false;
+            // 
+            // panel2
+            // 
+            panel2.Location = new Point(0, 30);
+            panel2.Name = "panel2";
+            panel2.Size = new Size(200, 100);
+            panel2.TabIndex = 0;
+            // 
+            // panel_tabContainer
+            // 
+            panel_tabContainer.Controls.Add(panel_activity);
+            panel_tabContainer.Controls.Add(panel_trips);
+            panel_tabContainer.Location = new Point(0, 25);
+            panel_tabContainer.Name = "panel_tabContainer";
+            panel_tabContainer.Size = new Size(265, 415);
+            panel_tabContainer.TabIndex = 5;
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(265, 484);
-            Controls.Add(panel_profile);
-            Controls.Add(panel_trips);
-            Controls.Add(panel_home);
-            Controls.Add(panel_activity);
+            Controls.Add(panel_tabContainer);
+            Controls.Add(panel_diagnostics);
             Controls.Add(panel1);
             FormBorderStyle = FormBorderStyle.Fixed3D;
             Name = "Form1";
             Text = "Piper Auto Start";
             panel1.ResumeLayout(false);
             panel_activity.ResumeLayout(false);
+            panel_trips.ResumeLayout(false);
+            panel_diagnostics.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)pictureBox_battery).EndInit();
+            ((System.ComponentModel.ISupportInitialize)pictureBox_connection).EndInit();
+            ((System.ComponentModel.ISupportInitialize)pictureBox_wifi).EndInit();
+            panel_tabContainer.ResumeLayout(false);
             ResumeLayout(false);
         }
 
@@ -184,5 +254,11 @@
         private Panel panel_home;
         private Panel panel_trips;
         private Panel panel_profile;
+        private Panel panel_diagnostics;
+        private Panel panel2;
+        private Panel panel_tabContainer;
+        private PictureBox pictureBox_wifi;
+        private PictureBox pictureBox_connection;
+        private PictureBox pictureBox_battery;
     }
 }

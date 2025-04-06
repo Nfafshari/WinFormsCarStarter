@@ -1,4 +1,5 @@
 using System.Drawing.Drawing2D;
+using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
 using static WinFormsCarStarter.Form1;
@@ -96,6 +97,7 @@ namespace WinFormsCarStarter
 
             // Show home tab on startup
             ShowTab(panel_home);
+            ActiveTab(button_home);
 
             /************************ Panel Setup *************************/
             /******* Diagnostics Panel ********/
@@ -139,12 +141,14 @@ namespace WinFormsCarStarter
             // Start/Stop button
             CircularButton circularButton_startStop = new CircularButton();
             circularButton_startStop.Size = new Size(80, 80);
+            circularButton_startStop.Invalidate();
             circularButton_startStop.Text = "Start";
             circularButton_startStop.Font = new Font("Segoe UI", 10);
             circularButton_startStop.Location = new Point(95, 200);
+            circularButton_startStop.BorderColor = Color.Black;
+            circularButton_startStop.BorderThickness = 1;
             circularButton_startStop.Click += circularBotton_startStop_Click;
             panel_home.Controls.Add(circularButton_startStop);
-
         }
 
         /************** GLOBAL METHODS *************/
@@ -235,6 +239,40 @@ namespace WinFormsCarStarter
         // CircularButton -- circular button class for changing buttons to a circle instead of rectangular
         public class CircularButton : Button
         {
+            // Border 
+            public Color BorderColor { get; set; } = Color.Black;
+            public int BorderThickness { get; set; } = 2;
+
+            // Mouse over
+            public Color HoverBackColor { get; set; } = Color.LightGray;
+            public Color DefaultBackColor { get; set; } = Color.White;
+
+            public Color HoverBorderColor { get; set; } = Color.MediumPurple;
+            public Color DefaultBorderColor { get; set; } = Color.Black;
+
+            private bool isHovering = false;
+
+            public CircularButton()
+            {
+                this.FlatStyle = FlatStyle.Flat;
+                this.BackColor = DefaultBackColor;
+                this.BorderColor = DefaultBorderColor;
+
+                this.MouseEnter += (s, e) => {
+                    isHovering = true;
+                    this.BackColor = HoverBackColor;
+                    this.BorderColor = HoverBorderColor;
+                    this.Invalidate(); // Force redraw
+                };
+
+                this.MouseLeave += (s, e) => {
+                    isHovering = false;
+                    this.BackColor = DefaultBackColor;
+                    this.BorderColor = DefaultBorderColor;
+                    this.Invalidate();
+                };
+            }
+
             protected override void OnResize(EventArgs e)
             {
                 base.OnResize(e);
@@ -242,8 +280,22 @@ namespace WinFormsCarStarter
                 path.AddEllipse(0, 0, this.Width, this.Height);
                 this.Region = new Region(path);
             }
-        }
+            protected override void OnPaint(PaintEventArgs pevent)
+            {
+                base.OnPaint(pevent);
 
+                // Smooth edges
+                pevent.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+
+                // Draw circular border
+                using (Pen pen = new Pen(BorderColor, BorderThickness))
+                {
+                    pen.Alignment = PenAlignment.Inset;
+                    pevent.Graphics.DrawEllipse(pen, BorderThickness / 2, BorderThickness / 2,
+                                                this.Width - BorderThickness, this.Height - BorderThickness);
+                }
+            }
+        }
         // 
         private void circularBotton_startStop_Click(object sender, EventArgs e)
         {

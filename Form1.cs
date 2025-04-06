@@ -107,7 +107,7 @@ namespace WinFormsCarStarter
             label_time.Font = new Font("Segoe UI", 8);
             label_time.ForeColor = Color.Black;
             label_time.Padding = new Padding(0, 3, 0, 0);
-            panel_diagnostics.Controls.Add(label_time); 
+            panel_diagnostics.Controls.Add(label_time);
 
             // Timer to update the time every second
             System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
@@ -138,17 +138,22 @@ namespace WinFormsCarStarter
             label_home.Location = new Point(102, 20);
             panel_home.Controls.Add(label_home);
 
-            // Start/Stop button
-            CircularButton circularButton_startStop = new CircularButton();
-            circularButton_startStop.Size = new Size(80, 80);
-            circularButton_startStop.Invalidate();
-            circularButton_startStop.Text = "Start";
-            circularButton_startStop.Font = new Font("Segoe UI", 10);
-            circularButton_startStop.Location = new Point(95, 200);
-            circularButton_startStop.BorderColor = Color.Black;
-            circularButton_startStop.BorderThickness = 1;
-            circularButton_startStop.Click += circularBotton_startStop_Click;
-            panel_home.Controls.Add(circularButton_startStop);
+            // Start/Stop Button
+            RoundButton roundButton_startStop = new RoundButton
+            {
+                Size = new Size(100, 100),
+                Location = new Point(50, 50),
+                Text = "Click Me",
+                BackColor = Color.LightBlue,
+                ForeColor = Color.Black,
+                RecessDepth = 2000,
+                BevelHeight = 7,
+                BevelDepth = 7,
+                Dome = true,
+
+            };
+            panel_home.Controls.Add(roundButton_startStop);
+
         }
 
         /************** GLOBAL METHODS *************/
@@ -232,74 +237,157 @@ namespace WinFormsCarStarter
         private void button_profile_Click(object sender, EventArgs e)
         {
             ShowTab(panel_profile);
-            ActiveTab(button_profile); 
+            ActiveTab(button_profile);
         }
 
-        /********************** HOME PAGE CONTROLS *************************/
-        // CircularButton -- circular button class for changing buttons to a circle instead of rectangular
-        public class CircularButton : Button
+        private void roundButton_Click(object sender, EventArgs e)
         {
-            // Border 
-            public Color BorderColor { get; set; } = Color.Black;
-            public int BorderThickness { get; set; } = 2;
+            MessageBox.Show("This works now!");
+        }
 
-            // Mouse over
-            public Color HoverBackColor { get; set; } = Color.LightGray;
-            public Color DefaultBackColor { get; set; } = Color.White;
+        /************************* Circular Button **************************/
+        // Paint Override
+        public class RoundButton : Button
+        {
+            public int RecessDepth { get; set; } = 10;
+            public int BevelHeight { get; set; } = 5;
+            public int BevelDepth { get; set; } = 5;
+            public bool Dome { get; set; } = true;
 
-            public Color HoverBorderColor { get; set; } = Color.MediumPurple;
-            public Color DefaultBorderColor { get; set; } = Color.Black;
-
-            private bool isHovering = false;
-
-            public CircularButton()
+            protected override void OnPaint(PaintEventArgs e)
             {
-                this.FlatStyle = FlatStyle.Flat;
-                this.BackColor = DefaultBackColor;
-                this.BorderColor = DefaultBorderColor;
+                base.OnPaint(e);
+                Graphics g = e.Graphics;
+                g.SmoothingMode = SmoothingMode.AntiAlias;
 
-                this.MouseEnter += (s, e) => {
-                    isHovering = true;
-                    this.BackColor = HoverBackColor;
-                    this.BorderColor = HoverBorderColor;
-                    this.Invalidate(); // Force redraw
-                };
+                Rectangle buttonRect = this.ClientRectangle;
+                int edgeWidth = GetEdgeWidth(buttonRect);
 
-                this.MouseLeave += (s, e) => {
-                    isHovering = false;
-                    this.BackColor = DefaultBackColor;
-                    this.BorderColor = DefaultBorderColor;
-                    this.Invalidate();
-                };
-            }
+                FillBackground(g, buttonRect);
 
-            protected override void OnResize(EventArgs e)
-            {
-                base.OnResize(e);
-                GraphicsPath path = new GraphicsPath();
-                path.AddEllipse(0, 0, this.Width, this.Height);
-                this.Region = new Region(path);
-            }
-            protected override void OnPaint(PaintEventArgs pevent)
-            {
-                base.OnPaint(pevent);
-
-                // Smooth edges
-                pevent.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-
-                // Draw circular border
-                using (Pen pen = new Pen(BorderColor, BorderThickness))
+                if (RecessDepth > 0)
                 {
-                    pen.Alignment = PenAlignment.Inset;
-                    pevent.Graphics.DrawEllipse(pen, BorderThickness / 2, BorderThickness / 2,
-                                                this.Width - BorderThickness, this.Height - BorderThickness);
+                    DrawRecess(g, ref buttonRect);
+                }
+
+                DrawEdges(g, ref buttonRect);
+
+                ShrinkShape(ref buttonRect, edgeWidth);
+
+                DrawButton(g, buttonRect);
+
+                DrawText(g, buttonRect);
+
+                SetClickableRegion();
+            }
+
+            private int GetEdgeWidth(Rectangle rect)
+            {
+                return Math.Min(rect.Width, rect.Height) / 10;
+            }
+
+            private void FillBackground(Graphics g, Rectangle rect)
+            {
+                using (Brush brush = new SolidBrush(this.Parent.BackColor))
+                {
+                    g.FillRectangle(brush, rect);
                 }
             }
-        }
-        // 
-        private void circularBotton_startStop_Click(object sender, EventArgs e)
-        {
-            
+
+            private void DrawRecess(Graphics g, ref Rectangle rect)
+            {
+                using (GraphicsPath path = new GraphicsPath())
+                {
+                    path.AddEllipse(rect);
+                    using (PathGradientBrush brush = new PathGradientBrush(path))
+                    {
+                        brush.CenterColor = Color.White;
+                        brush.SurroundColors = new Color[] { Color.Black };
+                        g.FillPath(brush, path);
+                    }
+                }
+            }
+
+            private void DrawEdges(Graphics g, ref Rectangle rect)
+            {
+                using (GraphicsPath path = new GraphicsPath())
+                {
+                    path.AddEllipse(rect);
+                    using (PathGradientBrush brush = new PathGradientBrush(path))
+                    {
+                        brush.CenterColor = Color.WhiteSmoke;
+                        brush.SurroundColors = new Color[] { Color.Gray };
+                        g.FillPath(brush, path);
+                    }
+                }
+            }
+
+            private void ShrinkShape(ref Rectangle rect, int amount)
+            {
+                rect.Inflate(-amount, -amount);
+            }
+
+            private void DrawButton(Graphics g, Rectangle rect)
+            {
+                using (GraphicsPath path = new GraphicsPath())
+                {
+                    path.AddEllipse(rect);
+
+                    using (PathGradientBrush brush = new PathGradientBrush(path))
+                    {
+                        if (Dome)
+                        {
+                            brush.CenterColor = Color.RoyalBlue;
+                            brush.SurroundColors = new Color[] { Color.LightGreen };
+                            brush.CenterPoint = new PointF(rect.Left + rect.Width / 3f, rect.Top + rect.Height / 3f);
+                            brush.CenterColor = isHovered ? Color.LightSkyBlue : Color.LightSteelBlue;
+                            brush.SurroundColors = new Color[] { isHovered ? Color.Blue : Color.RoyalBlue };
+                        }
+                        else
+                        {
+                            brush.CenterColor = this.BackColor;
+                            brush.SurroundColors = new Color[] { ControlPaint.Dark(this.BackColor) };
+                        }
+
+                        g.FillPath(brush, path);
+                    }
+
+                    using (Pen border = new Pen(Color.DarkBlue, 2))
+                    {
+                        g.DrawEllipse(border, rect);
+                    }
+                }
+            }
+
+            private void DrawText(Graphics g, Rectangle rect)
+            {
+                TextRenderer.DrawText(g, this.Text, this.Font, rect, this.ForeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+            }
+
+            private void SetClickableRegion()
+            {
+                using (GraphicsPath path = new GraphicsPath())
+                {
+                    path.AddEllipse(this.ClientRectangle);
+                    this.Region = new Region(path);
+                }
+            }
+
+            private bool isHovered = false;
+
+            protected override void OnMouseEnter(EventArgs e)
+            {
+                base.OnMouseEnter(e);
+                isHovered = true;
+                Invalidate(); 
+            }
+
+            protected override void OnMouseLeave(EventArgs e)
+            {
+                base.OnMouseLeave(e);
+                isHovered = false;
+                Invalidate();
+            }
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
 using static WinFormsCarStarter.Form1;
+using System.Runtime.CompilerServices;
 
 namespace WinFormsCarStarter
 {
@@ -10,10 +11,13 @@ namespace WinFormsCarStarter
     {
         private ImageList imageList = new ImageList();
         private ImageList active_imageList = new ImageList();
+        private bool isToggled = false;
+        private RoundButton roundButton_startStop;
 
         public Form1()
         {
             InitializeComponent();
+
 
             /******** Tabbed Interface Setup ********/
             // Tab setup using panels
@@ -102,11 +106,12 @@ namespace WinFormsCarStarter
             /************************ Panel Setup *************************/
             /******* Diagnostics Panel ********/
             // Clock
-            Label label_time = new Label();
-            label_time.Name = "Clock";
-            label_time.Font = new Font("Segoe UI", 8);
-            label_time.ForeColor = Color.Black;
-            label_time.Padding = new Padding(0, 3, 0, 0);
+            Label label_time = new Label() {
+                Name = "Clock",
+                Font = new Font("Segoe UI", 8),
+                ForeColor = Color.Black,
+                Padding = new Padding(0, 3, 0, 0)
+            };
             panel_diagnostics.Controls.Add(label_time);
 
             // Timer to update the time every second
@@ -131,34 +136,46 @@ namespace WinFormsCarStarter
             pictureBox_battery.SizeMode = PictureBoxSizeMode.StretchImage;
 
             /******* Home Tab ********/
-            Label label_home = new Label();
-            label_home.Name = "Home Tab";
-            label_home.Text = "Home";
-            label_home.Font = new Font("Segoe UI", 14, FontStyle.Bold);
-            label_home.Location = new Point(102, 20);
+            Label label_home = new Label() {
+                Name = "Home Tab",
+                Text = "Home",
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                Location = new Point(102, 20),
+            };
             panel_home.Controls.Add(label_home);
+
 
             // Start/Stop Button
             RoundButton roundButton_startStop = new RoundButton
             {
                 Size = new Size(100, 100),
-                Location = new Point(50, 50),
-                Text = "Click Me",
-                BackColor = Color.LightBlue,
+                Location = new Point(80, 200),
+                Text = "Start",
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                BackColor = Color.Green,
                 ForeColor = Color.Black,
-                RecessDepth = 2000,
-                BevelHeight = 7,
-                BevelDepth = 7,
-                Dome = true,
-
             };
+            roundButton_startStop.Click += roundButton_startStop_Click;
             panel_home.Controls.Add(roundButton_startStop);
+
+            // Lock Doors
+            RoundButton roundButton_lock = new RoundButton
+            {
+                Size = new Size(50, 50),
+                Location = new Point(30, 250),
+                Text = "Lock",
+                Font = new Font("Segoe UI", 8, FontStyle.Regular),
+                BackColor = Color.MediumPurple,
+                ForeColor = Color.Black,
+            };
+            roundButton_lock.Click += roundButton_lock_Click;
+            panel_home.Controls.Add(roundButton_lock);
 
         }
 
         /************** GLOBAL METHODS *************/
         // ShowTab -- makes the tab (panel) visible depending on which button is clicked
-        private void ShowTab (Panel visibleTab)
+        private void ShowTab(Panel visibleTab)
         {
             // Hide all tabs
             panel_activity.Visible = false;
@@ -173,7 +190,7 @@ namespace WinFormsCarStarter
 
         /******************* TAB BUTTON METHODS ************************/
         // ActiveTab -- shows the user what tab they are currently on 
-        private void ActiveTab (Button activeTab)
+        private void ActiveTab(Button activeTab)
         {
             // Set all tabs text one color
             button_activity.ForeColor = Color.Black;
@@ -205,15 +222,13 @@ namespace WinFormsCarStarter
             else if (activeTab == button_profile)
                 button_profile.ImageIndex = 9;
         }
-
+        
+        /************************ Bottom Tab Event Handlers ********************************/
         // button_activity_Click -- controller for when activity button is clicked
         private void button_activity_Click(object sender, EventArgs e)
         {
             ShowTab(panel_activity);
             ActiveTab(button_activity);
-
-
-
         }
 
         private void button_status_Click(object sender, EventArgs e)
@@ -240,19 +255,54 @@ namespace WinFormsCarStarter
             ActiveTab(button_profile);
         }
 
-        private void roundButton_Click(object sender, EventArgs e)
+        private void roundButton_startStop_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("This works now!");
+            var senderButton = (RoundButton)sender;
+
+            isToggled = !isToggled;
+
+            if (isToggled)
+            {
+                senderButton.BackColor = Color.Red;  // Access the button here
+                senderButton.Text = "STOP";
+                senderButton.Font = new Font("Segoe UI", 10, FontStyle.Regular);
+            }
+            else
+            {
+                senderButton.BackColor = Color.Green;  // Access the button here
+                senderButton.Text = "Start";
+                senderButton.Font = new Font("Segoe UI", 10, FontStyle.Regular);
+            }
+
+            senderButton.Invalidate(); // Force redraw
         }
 
-        /************************* Circular Button **************************/
-        // Paint Override
+        private void roundButton_lock_Click(object sender, EventArgs e)
+        {
+            
+        }
+
         public class RoundButton : Button
         {
-            public int RecessDepth { get; set; } = 10;
-            public int BevelHeight { get; set; } = 5;
-            public int BevelDepth { get; set; } = 5;
-            public bool Dome { get; set; } = true;
+
+
+            public RoundButton()
+            {
+                this.FlatStyle = FlatStyle.Flat;
+                this.FlatAppearance.BorderSize = 0;
+                this.BackColor = Color.Green;
+                this.ForeColor = Color.White;
+
+
+                this.Text = "Click Me";
+
+                this.SetStyle(ControlStyles.AllPaintingInWmPaint |
+                              ControlStyles.UserPaint |
+                              ControlStyles.ResizeRedraw |
+                              ControlStyles.OptimizedDoubleBuffer |
+                              ControlStyles.SupportsTransparentBackColor, true);
+            }
+
 
             protected override void OnPaint(PaintEventArgs e)
             {
@@ -264,13 +314,6 @@ namespace WinFormsCarStarter
                 int edgeWidth = GetEdgeWidth(buttonRect);
 
                 FillBackground(g, buttonRect);
-
-                if (RecessDepth > 0)
-                {
-                    DrawRecess(g, ref buttonRect);
-                }
-
-                DrawEdges(g, ref buttonRect);
 
                 ShrinkShape(ref buttonRect, edgeWidth);
 
@@ -294,34 +337,6 @@ namespace WinFormsCarStarter
                 }
             }
 
-            private void DrawRecess(Graphics g, ref Rectangle rect)
-            {
-                using (GraphicsPath path = new GraphicsPath())
-                {
-                    path.AddEllipse(rect);
-                    using (PathGradientBrush brush = new PathGradientBrush(path))
-                    {
-                        brush.CenterColor = Color.White;
-                        brush.SurroundColors = new Color[] { Color.Black };
-                        g.FillPath(brush, path);
-                    }
-                }
-            }
-
-            private void DrawEdges(Graphics g, ref Rectangle rect)
-            {
-                using (GraphicsPath path = new GraphicsPath())
-                {
-                    path.AddEllipse(rect);
-                    using (PathGradientBrush brush = new PathGradientBrush(path))
-                    {
-                        brush.CenterColor = Color.WhiteSmoke;
-                        brush.SurroundColors = new Color[] { Color.Gray };
-                        g.FillPath(brush, path);
-                    }
-                }
-            }
-
             private void ShrinkShape(ref Rectangle rect, int amount)
             {
                 rect.Inflate(-amount, -amount);
@@ -335,24 +350,13 @@ namespace WinFormsCarStarter
 
                     using (PathGradientBrush brush = new PathGradientBrush(path))
                     {
-                        if (Dome)
-                        {
-                            brush.CenterColor = Color.RoyalBlue;
-                            brush.SurroundColors = new Color[] { Color.LightGreen };
-                            brush.CenterPoint = new PointF(rect.Left + rect.Width / 3f, rect.Top + rect.Height / 3f);
-                            brush.CenterColor = isHovered ? Color.LightSkyBlue : Color.LightSteelBlue;
-                            brush.SurroundColors = new Color[] { isHovered ? Color.Blue : Color.RoyalBlue };
-                        }
-                        else
-                        {
-                            brush.CenterColor = this.BackColor;
-                            brush.SurroundColors = new Color[] { ControlPaint.Dark(this.BackColor) };
-                        }
 
+                        brush.CenterColor = this.BackColor;
+                        brush.SurroundColors = new Color[] { ControlPaint.Dark(this.BackColor) };
                         g.FillPath(brush, path);
                     }
 
-                    using (Pen border = new Pen(Color.DarkBlue, 2))
+                    using (Pen border = new Pen(Color.Black, 2))
                     {
                         g.DrawEllipse(border, rect);
                     }
@@ -372,22 +376,7 @@ namespace WinFormsCarStarter
                     this.Region = new Region(path);
                 }
             }
-
-            private bool isHovered = false;
-
-            protected override void OnMouseEnter(EventArgs e)
-            {
-                base.OnMouseEnter(e);
-                isHovered = true;
-                Invalidate(); 
-            }
-
-            protected override void OnMouseLeave(EventArgs e)
-            {
-                base.OnMouseLeave(e);
-                isHovered = false;
-                Invalidate();
-            }
         }
     }
 }
+  

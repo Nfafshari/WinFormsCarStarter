@@ -2,19 +2,18 @@ using System.Drawing.Drawing2D;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
-using static WinFormsCarStarter.Form1;
+using static WinFormsCarStarter.MainForm;
 using System.Runtime.CompilerServices;
 
 namespace WinFormsCarStarter
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
         private ImageList imageList = new ImageList();
         private ImageList active_imageList = new ImageList();
         private bool isToggled = false;
-        private RoundButton roundButton_startStop;
 
-        public Form1()
+        public MainForm()
         {
             InitializeComponent();
 
@@ -149,7 +148,7 @@ namespace WinFormsCarStarter
             RoundButton roundButton_startStop = new RoundButton
             {
                 Size = new Size(100, 100),
-                Location = new Point(80, 200),
+                Location = new Point(80, 175),
                 Text = "Start",
                 Font = new Font("Segoe UI", 10, FontStyle.Regular),
                 BackColor = Color.Green,
@@ -162,7 +161,7 @@ namespace WinFormsCarStarter
             RoundButton roundButton_lock = new RoundButton
             {
                 Size = new Size(50, 50),
-                Location = new Point(30, 250),
+                Location = new Point(30, 225),
                 Text = "Lock",
                 Font = new Font("Segoe UI", 8, FontStyle.Regular),
                 BackColor = Color.MediumPurple,
@@ -170,6 +169,20 @@ namespace WinFormsCarStarter
             };
             roundButton_lock.Click += roundButton_lock_Click;
             panel_home.Controls.Add(roundButton_lock);
+
+
+            // Unlock Doors
+            RoundButton roundButton_unlock = new RoundButton
+            {
+                Size = new Size(50, 50),
+                Location = new Point(180, 225),
+                Text = "Unlock",
+                Font = new Font("Segoe UI", 7, FontStyle.Regular),
+                BackColor = Color.MediumPurple,
+                ForeColor = Color.Black,
+            };
+            roundButton_unlock.Click += roundButton_unlock_Click;
+            panel_home.Controls.Add(roundButton_unlock);
 
         }
 
@@ -186,6 +199,27 @@ namespace WinFormsCarStarter
 
             // Show parameter tab
             visibleTab.Visible = true;
+        }
+
+        private void ShowNotification(string message, string type)
+        {
+            Color backColor;
+
+            switch (type.ToLower())
+            {
+                case "success":
+                    backColor = Color.Green; 
+                    break;
+                case "stop":
+                    backColor = Color.Red;
+                    break;
+                default:
+                    backColor = Color.Gray;
+                    break;
+            }
+
+            Notification notification = new Notification(message, backColor, this);
+            notification.Show();
         }
 
         /******************* TAB BUTTON METHODS ************************/
@@ -224,10 +258,9 @@ namespace WinFormsCarStarter
         }
         
         /************************ Bottom Tab Event Handlers ********************************/
-        // button_activity_Click -- controller for when activity button is clicked
         private void button_activity_Click(object sender, EventArgs e)
         {
-            ShowTab(panel_activity);
+            ShowTab(panel_activity); 
             ActiveTab(button_activity);
         }
 
@@ -255,6 +288,7 @@ namespace WinFormsCarStarter
             ActiveTab(button_profile);
         }
 
+        /*************************** HOME PAGE EVENT HANDLERS *****************************/
         private void roundButton_startStop_Click(object sender, EventArgs e)
         {
             var senderButton = (RoundButton)sender;
@@ -263,29 +297,36 @@ namespace WinFormsCarStarter
 
             if (isToggled)
             {
-                senderButton.BackColor = Color.Red;  // Access the button here
+                senderButton.BackColor = Color.Red;  
                 senderButton.Text = "STOP";
                 senderButton.Font = new Font("Segoe UI", 10, FontStyle.Regular);
+                ShowNotification("Vehicle Started Successfully", "success");
             }
             else
             {
-                senderButton.BackColor = Color.Green;  // Access the button here
+                senderButton.BackColor = Color.Green;  
                 senderButton.Text = "Start";
                 senderButton.Font = new Font("Segoe UI", 10, FontStyle.Regular);
+                ShowNotification("Vehicle Stopped Succesfuly", "stop");
             }
 
-            senderButton.Invalidate(); // Force redraw
+            senderButton.Invalidate(); 
         }
 
         private void roundButton_lock_Click(object sender, EventArgs e)
         {
-            
+            ShowNotification("Vehicle Locked Successfully", "success");
         }
 
+        private void roundButton_unlock_Click(object sender, EventArgs e)
+        {
+            ShowNotification("Vehicle Unlocked Successfully", "success");
+        }
+
+        /************************** ROUND BUTTON CLASS *********************************/
+        // Class for making normal buttons into round buttons for home tab
         public class RoundButton : Button
         {
-
-
             public RoundButton()
             {
                 this.FlatStyle = FlatStyle.Flat;

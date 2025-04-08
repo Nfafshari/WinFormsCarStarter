@@ -1,6 +1,6 @@
 ﻿namespace WinFormsCarStarter
 {
-    partial class Form1
+    partial class MainForm
     {
         /// <summary>
         ///  Required designer variable.
@@ -219,7 +219,7 @@
             panel_tabContainer.Size = new Size(265, 415);
             panel_tabContainer.TabIndex = 5;
             // 
-            // Form1
+            // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -228,7 +228,8 @@
             Controls.Add(panel_diagnostics);
             Controls.Add(panel1);
             FormBorderStyle = FormBorderStyle.Fixed3D;
-            Name = "Form1";
+            Name = "MainForm";
+            StartPosition = FormStartPosition.CenterScreen;
             Text = "Piper Auto Start";
             panel1.ResumeLayout(false);
             panel_activity.ResumeLayout(false);

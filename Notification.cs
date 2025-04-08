@@ -61,7 +61,7 @@ namespace WinFormsCarStarter
         {
             if (fade == 1) // Fade in
             {
-                this.Opacity += 0.1;
+                this.Opacity += 0.25;
                 if (this.Opacity >= 1)
                 {
                     fade = 2;

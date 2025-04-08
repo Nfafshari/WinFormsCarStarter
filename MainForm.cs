@@ -9,9 +9,16 @@ namespace WinFormsCarStarter
 {
     public partial class MainForm : Form
     {
+        // Global variables (private to MainForm)
         private ImageList imageList = new ImageList();
         private ImageList active_imageList = new ImageList();
         private bool isToggled = false;
+        private Panel slidePanel;
+        private bool isDragging = false;
+        private int dragStart;
+        private int originalPanelTop;
+        private int collapsedTop;
+        private int expandedTop;
 
         public MainForm()
         {
@@ -102,10 +109,11 @@ namespace WinFormsCarStarter
             ShowTab(panel_home);
             ActiveTab(button_home);
 
-            /************************ Panel Setup *************************/
-            /******* Diagnostics Panel ********/
+            /************************ TAB DESIGN *************************/
+            /******* Diagnostics ********/
             // Clock
-            Label label_time = new Label() {
+            Label label_time = new Label()
+            {
                 Name = "Clock",
                 Font = new Font("Segoe UI", 8),
                 ForeColor = Color.Black,
@@ -134,8 +142,9 @@ namespace WinFormsCarStarter
             pictureBox_battery.Image = Image.FromFile("icons\\battery.png");
             pictureBox_battery.SizeMode = PictureBoxSizeMode.StretchImage;
 
-            /******* Home Tab ********/
-            Label label_home = new Label() {
+            /*************** Home Tab ******************/
+            Label label_home = new Label()
+            {
                 Name = "Home Tab",
                 Text = "Home",
                 Font = new Font("Segoe UI", 14, FontStyle.Bold),
@@ -150,7 +159,7 @@ namespace WinFormsCarStarter
                 Size = new Size(100, 100),
                 Location = new Point(80, 175),
                 Text = "Start",
-                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                Font = new Font("Segoe UI", 12, FontStyle.Regular),
                 BackColor = Color.Green,
                 ForeColor = Color.Black,
             };
@@ -184,6 +193,82 @@ namespace WinFormsCarStarter
             roundButton_unlock.Click += roundButton_unlock_Click;
             panel_home.Controls.Add(roundButton_unlock);
 
+            // ******** Slide Up Panel Home Tab ************/
+            collapsedTop = panel_home.Height - 125;
+            expandedTop = panel_home.Height - 200;
+            
+            slidePanel = new Panel
+            {
+                Height = 200,
+                Width = this.ClientSize.Width,
+                Top = collapsedTop,
+                Left = 0,
+                BackColor = Color.FromArgb(125,125,125),
+                Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
+            };
+            panel_home.Controls.Add(slidePanel);
+
+            slidePanel.MouseDown += SlidePanel_MouseDown;
+            slidePanel.MouseMove += SlidePanel_MouseMove;
+            slidePanel.MouseUp += SlidePanel_MouseUp;
+            CornerRadius(slidePanel, 20);
+
+            Panel handleBar = new Panel
+            {
+                Size = new Size(100, 5),
+                BackColor = Color.FromArgb(100,100,100),
+                Location = new Point((slidePanel.Width - 100) / 2, 5),
+                Cursor = Cursors.Hand
+            };
+            slidePanel.Controls.Add(handleBar);
+
+            handleBar.MouseDown += SlidePanel_MouseDown;
+            handleBar.MouseMove += SlidePanel_MouseMove;
+            handleBar.MouseUp += SlidePanel_MouseUp;
+            CornerRadius(handleBar, 20);
+
+            /********* Slide Panel Buttons **********/
+            Button button_lights = new Button
+            {
+                Size = new Size(75, 50),
+                Location = new Point(10, 15),
+                Font = new Font("Segoe UI", 9, FontStyle.Regular),
+                Text = "Lights",
+                BackColor = Color.MediumPurple,
+                FlatStyle = FlatStyle.Flat
+            };
+            button_lights.FlatAppearance.BorderSize = 2;
+            button_lights.FlatAppearance.BorderColor = Color.Black;
+            CornerRadius(button_lights, 10);
+            slidePanel.Controls.Add(button_lights);
+
+            Button button_hazards = new Button 
+            {
+                Size = new Size(75, 50),
+                Location = new Point(95, 15),
+                Font = new Font("Segoe UI", 9, FontStyle.Regular),
+                Text = "Hazards",
+                BackColor = Color.MediumPurple,
+                FlatStyle = FlatStyle.Flat
+            };
+            button_hazards.FlatAppearance.BorderSize = 2;
+            button_hazards.FlatAppearance.BorderColor = Color.Black;
+            CornerRadius(button_hazards, 10);
+            slidePanel.Controls.Add(button_hazards);
+
+            Button button_horn = new Button
+            {
+                Size = new Size(75, 50),
+                Location = new Point(180, 15),
+                Font = new Font("Segoe UI", 9, FontStyle.Regular),
+                Text = "Horn",
+                BackColor = Color.MediumPurple,
+                FlatStyle = FlatStyle.Flat
+            };
+            button_horn.FlatAppearance.BorderSize = 2;
+            button_horn.FlatAppearance.BorderColor = Color.Black;
+            CornerRadius(button_horn, 10);
+            slidePanel.Controls.Add(button_horn);
         }
 
         /************** GLOBAL METHODS *************/
@@ -299,14 +384,14 @@ namespace WinFormsCarStarter
             {
                 senderButton.BackColor = Color.Red;  
                 senderButton.Text = "STOP";
-                senderButton.Font = new Font("Segoe UI", 10, FontStyle.Regular);
+                senderButton.Font = new Font("Segoe UI", 12, FontStyle.Regular);
                 ShowNotification("Vehicle Started Successfully", "success");
             }
             else
             {
                 senderButton.BackColor = Color.Green;  
                 senderButton.Text = "Start";
-                senderButton.Font = new Font("Segoe UI", 10, FontStyle.Regular);
+                senderButton.Font = new Font("Segoe UI", 12, FontStyle.Regular);
                 ShowNotification("Vehicle Stopped Succesfuly", "stop");
             }
 
@@ -321,6 +406,32 @@ namespace WinFormsCarStarter
         private void roundButton_unlock_Click(object sender, EventArgs e)
         {
             ShowNotification("Vehicle Unlocked Successfully", "success");
+        }
+
+        private void SlidePanel_MouseDown(object sender, MouseEventArgs e)
+        {
+            isDragging = true;
+            dragStart = Cursor.Position.Y;
+            originalPanelTop = slidePanel.Top;
+        }
+
+        private void SlidePanel_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (!isDragging) return;
+
+            int delta = Cursor.Position.Y - dragStart;
+            int newTop = originalPanelTop + delta;
+
+            // Clamp between expanded and collapsed positions
+            newTop = Math.Max(expandedTop, Math.Min(collapsedTop, newTop));
+
+            slidePanel.Top = newTop;
+            slidePanel.Height = this.ClientSize.Height - newTop;
+        }
+
+        private void SlidePanel_MouseUp(object sender, MouseEventArgs e)
+        {
+            isDragging = false;
         }
 
         /************************** ROUND BUTTON CLASS *********************************/
@@ -393,7 +504,7 @@ namespace WinFormsCarStarter
                     {
 
                         brush.CenterColor = this.BackColor;
-                        brush.SurroundColors = new Color[] { ControlPaint.Dark(this.BackColor) };
+                        brush.SurroundColors = new Color[] { ControlPaint.Light(this.BackColor) };
                         g.FillPath(brush, path);
                     }
 
@@ -417,6 +528,19 @@ namespace WinFormsCarStarter
                     this.Region = new Region(path);
                 }
             }
+        }
+
+        // Rounded corners for slide panel
+        private void CornerRadius(Control control, int radius)
+        {
+            Rectangle bounds = control.ClientRectangle;
+            GraphicsPath path = new GraphicsPath();
+            path.AddArc(bounds.X, bounds.Y, radius, radius, 180, 90);
+            path.AddArc(bounds.Right - radius, bounds.Y, radius, radius, 270, 90);
+            path.AddArc(bounds.Right - radius, bounds.Bottom - radius, radius, radius, 0, 90);
+            path.AddArc(bounds.X, bounds.Bottom - radius, radius, radius, 90, 90);
+            path.CloseFigure();
+            control.Region = new Region(path);
         }
     }
 }

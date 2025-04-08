@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
 using static WinFormsCarStarter.Form1;
+using System.Runtime.CompilerServices;
 
 namespace WinFormsCarStarter
 {
@@ -10,10 +11,13 @@ namespace WinFormsCarStarter
     {
         private ImageList imageList = new ImageList();
         private ImageList active_imageList = new ImageList();
+        private bool isToggled = false;
+        private RoundButton roundButton_startStop;
 
         public Form1()
         {
             InitializeComponent();
+
 
             /******** Tabbed Interface Setup ********/
             // Tab setup using panels
@@ -102,12 +106,13 @@ namespace WinFormsCarStarter
             /************************ Panel Setup *************************/
             /******* Diagnostics Panel ********/
             // Clock
-            Label label_time = new Label();
-            label_time.Name = "Clock";
-            label_time.Font = new Font("Segoe UI", 8);
-            label_time.ForeColor = Color.Black;
-            label_time.Padding = new Padding(0, 3, 0, 0);
-            panel_diagnostics.Controls.Add(label_time); 
+            Label label_time = new Label() {
+                Name = "Clock",
+                Font = new Font("Segoe UI", 8),
+                ForeColor = Color.Black,
+                Padding = new Padding(0, 3, 0, 0)
+            };
+            panel_diagnostics.Controls.Add(label_time);
 
             // Timer to update the time every second
             System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
@@ -131,29 +136,46 @@ namespace WinFormsCarStarter
             pictureBox_battery.SizeMode = PictureBoxSizeMode.StretchImage;
 
             /******* Home Tab ********/
-            Label label_home = new Label();
-            label_home.Name = "Home Tab";
-            label_home.Text = "Home";
-            label_home.Font = new Font("Segoe UI", 14, FontStyle.Bold);
-            label_home.Location = new Point(102, 20);
+            Label label_home = new Label() {
+                Name = "Home Tab",
+                Text = "Home",
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                Location = new Point(102, 20),
+            };
             panel_home.Controls.Add(label_home);
 
-            // Start/Stop button
-            CircularButton circularButton_startStop = new CircularButton();
-            circularButton_startStop.Size = new Size(80, 80);
-            circularButton_startStop.Invalidate();
-            circularButton_startStop.Text = "Start";
-            circularButton_startStop.Font = new Font("Segoe UI", 10);
-            circularButton_startStop.Location = new Point(95, 200);
-            circularButton_startStop.BorderColor = Color.Black;
-            circularButton_startStop.BorderThickness = 1;
-            circularButton_startStop.Click += circularBotton_startStop_Click;
-            panel_home.Controls.Add(circularButton_startStop);
+
+            // Start/Stop Button
+            RoundButton roundButton_startStop = new RoundButton
+            {
+                Size = new Size(100, 100),
+                Location = new Point(80, 200),
+                Text = "Start",
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                BackColor = Color.Green,
+                ForeColor = Color.Black,
+            };
+            roundButton_startStop.Click += roundButton_startStop_Click;
+            panel_home.Controls.Add(roundButton_startStop);
+
+            // Lock Doors
+            RoundButton roundButton_lock = new RoundButton
+            {
+                Size = new Size(50, 50),
+                Location = new Point(30, 250),
+                Text = "Lock",
+                Font = new Font("Segoe UI", 8, FontStyle.Regular),
+                BackColor = Color.MediumPurple,
+                ForeColor = Color.Black,
+            };
+            roundButton_lock.Click += roundButton_lock_Click;
+            panel_home.Controls.Add(roundButton_lock);
+
         }
 
         /************** GLOBAL METHODS *************/
         // ShowTab -- makes the tab (panel) visible depending on which button is clicked
-        private void ShowTab (Panel visibleTab)
+        private void ShowTab(Panel visibleTab)
         {
             // Hide all tabs
             panel_activity.Visible = false;
@@ -168,7 +190,7 @@ namespace WinFormsCarStarter
 
         /******************* TAB BUTTON METHODS ************************/
         // ActiveTab -- shows the user what tab they are currently on 
-        private void ActiveTab (Button activeTab)
+        private void ActiveTab(Button activeTab)
         {
             // Set all tabs text one color
             button_activity.ForeColor = Color.Black;
@@ -200,15 +222,13 @@ namespace WinFormsCarStarter
             else if (activeTab == button_profile)
                 button_profile.ImageIndex = 9;
         }
-
+        
+        /************************ Bottom Tab Event Handlers ********************************/
         // button_activity_Click -- controller for when activity button is clicked
         private void button_activity_Click(object sender, EventArgs e)
         {
             ShowTab(panel_activity);
             ActiveTab(button_activity);
-
-
-
         }
 
         private void button_status_Click(object sender, EventArgs e)
@@ -232,74 +252,131 @@ namespace WinFormsCarStarter
         private void button_profile_Click(object sender, EventArgs e)
         {
             ShowTab(panel_profile);
-            ActiveTab(button_profile); 
+            ActiveTab(button_profile);
         }
 
-        /********************** HOME PAGE CONTROLS *************************/
-        // CircularButton -- circular button class for changing buttons to a circle instead of rectangular
-        public class CircularButton : Button
+        private void roundButton_startStop_Click(object sender, EventArgs e)
         {
-            // Border 
-            public Color BorderColor { get; set; } = Color.Black;
-            public int BorderThickness { get; set; } = 2;
+            var senderButton = (RoundButton)sender;
 
-            // Mouse over
-            public Color HoverBackColor { get; set; } = Color.LightGray;
-            public Color DefaultBackColor { get; set; } = Color.White;
+            isToggled = !isToggled;
 
-            public Color HoverBorderColor { get; set; } = Color.MediumPurple;
-            public Color DefaultBorderColor { get; set; } = Color.Black;
-
-            private bool isHovering = false;
-
-            public CircularButton()
+            if (isToggled)
             {
-                this.FlatStyle = FlatStyle.Flat;
-                this.BackColor = DefaultBackColor;
-                this.BorderColor = DefaultBorderColor;
-
-                this.MouseEnter += (s, e) => {
-                    isHovering = true;
-                    this.BackColor = HoverBackColor;
-                    this.BorderColor = HoverBorderColor;
-                    this.Invalidate(); // Force redraw
-                };
-
-                this.MouseLeave += (s, e) => {
-                    isHovering = false;
-                    this.BackColor = DefaultBackColor;
-                    this.BorderColor = DefaultBorderColor;
-                    this.Invalidate();
-                };
+                senderButton.BackColor = Color.Red;  // Access the button here
+                senderButton.Text = "STOP";
+                senderButton.Font = new Font("Segoe UI", 10, FontStyle.Regular);
+            }
+            else
+            {
+                senderButton.BackColor = Color.Green;  // Access the button here
+                senderButton.Text = "Start";
+                senderButton.Font = new Font("Segoe UI", 10, FontStyle.Regular);
             }
 
-            protected override void OnResize(EventArgs e)
-            {
-                base.OnResize(e);
-                GraphicsPath path = new GraphicsPath();
-                path.AddEllipse(0, 0, this.Width, this.Height);
-                this.Region = new Region(path);
-            }
-            protected override void OnPaint(PaintEventArgs pevent)
-            {
-                base.OnPaint(pevent);
-
-                // Smooth edges
-                pevent.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-
-                // Draw circular border
-                using (Pen pen = new Pen(BorderColor, BorderThickness))
-                {
-                    pen.Alignment = PenAlignment.Inset;
-                    pevent.Graphics.DrawEllipse(pen, BorderThickness / 2, BorderThickness / 2,
-                                                this.Width - BorderThickness, this.Height - BorderThickness);
-                }
-            }
+            senderButton.Invalidate(); // Force redraw
         }
-        // 
-        private void circularBotton_startStop_Click(object sender, EventArgs e)
+
+        private void roundButton_lock_Click(object sender, EventArgs e)
         {
             
         }
+
+        public class RoundButton : Button
+        {
+
+
+            public RoundButton()
+            {
+                this.FlatStyle = FlatStyle.Flat;
+                this.FlatAppearance.BorderSize = 0;
+                this.BackColor = Color.Green;
+                this.ForeColor = Color.White;
+
+
+                this.Text = "Click Me";
+
+                this.SetStyle(ControlStyles.AllPaintingInWmPaint |
+                              ControlStyles.UserPaint |
+                              ControlStyles.ResizeRedraw |
+                              ControlStyles.OptimizedDoubleBuffer |
+                              ControlStyles.SupportsTransparentBackColor, true);
+            }
+
+
+            protected override void OnPaint(PaintEventArgs e)
+            {
+                base.OnPaint(e);
+                Graphics g = e.Graphics;
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+
+                Rectangle buttonRect = this.ClientRectangle;
+                int edgeWidth = GetEdgeWidth(buttonRect);
+
+                FillBackground(g, buttonRect);
+
+                ShrinkShape(ref buttonRect, edgeWidth);
+
+                DrawButton(g, buttonRect);
+
+                DrawText(g, buttonRect);
+
+                SetClickableRegion();
+            }
+
+            private int GetEdgeWidth(Rectangle rect)
+            {
+                return Math.Min(rect.Width, rect.Height) / 10;
+            }
+
+            private void FillBackground(Graphics g, Rectangle rect)
+            {
+                using (Brush brush = new SolidBrush(this.Parent.BackColor))
+                {
+                    g.FillRectangle(brush, rect);
+                }
+            }
+
+            private void ShrinkShape(ref Rectangle rect, int amount)
+            {
+                rect.Inflate(-amount, -amount);
+            }
+
+            private void DrawButton(Graphics g, Rectangle rect)
+            {
+                using (GraphicsPath path = new GraphicsPath())
+                {
+                    path.AddEllipse(rect);
+
+                    using (PathGradientBrush brush = new PathGradientBrush(path))
+                    {
+
+                        brush.CenterColor = this.BackColor;
+                        brush.SurroundColors = new Color[] { ControlPaint.Dark(this.BackColor) };
+                        g.FillPath(brush, path);
+                    }
+
+                    using (Pen border = new Pen(Color.Black, 2))
+                    {
+                        g.DrawEllipse(border, rect);
+                    }
+                }
+            }
+
+            private void DrawText(Graphics g, Rectangle rect)
+            {
+                TextRenderer.DrawText(g, this.Text, this.Font, rect, this.ForeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+            }
+
+            private void SetClickableRegion()
+            {
+                using (GraphicsPath path = new GraphicsPath())
+                {
+                    path.AddEllipse(this.ClientRectangle);
+                    this.Region = new Region(path);
+                }
+            }
+        }
     }
 }
+  

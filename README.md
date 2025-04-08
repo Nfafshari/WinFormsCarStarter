@@ -8,9 +8,11 @@ Tech Stack: C#, Windows Forms, (INSERT DATABASE)
 2. Navigate to where you saved it: `cd <your location>`   
 3. From here you can begin working on it
 >[!IMPORTANT]
-> Commit when you finish a feature by:   
+> Commit and push (if needed) when you finish a feature by:   
 	- Staging it first: `git add .`  
 	- Then commit: `git commit -m "your message"`
+	- IF pushing:
+		- `git push REMOTE-NAME BRANCH-NAME` ex: `git push origin main` 
 
 >[!NOTE]
  >-- Please use a message when commiting that says briefly what you did  

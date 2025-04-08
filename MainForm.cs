@@ -530,7 +530,7 @@ namespace WinFormsCarStarter
             }
         }
 
-        // Rounded corners for slide panel
+        // Rounded corners for buttons and panels
         private void CornerRadius(Control control, int radius)
         {
             Rectangle bounds = control.ClientRectangle;

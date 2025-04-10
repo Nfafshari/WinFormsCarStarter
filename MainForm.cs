@@ -109,8 +109,9 @@ namespace WinFormsCarStarter
             ShowTab(panel_home);
             ActiveTab(button_home);
 
-            /************************ TAB DESIGN *************************/
-            /******* Diagnostics ********/
+            /******* Diagnostics ********
+            // Diagnostics at the top of the form to look like mobile device 
+            */
             // Clock
             Label label_time = new Label()
             {
@@ -142,7 +143,15 @@ namespace WinFormsCarStarter
             pictureBox_battery.Image = Image.FromFile("icons\\battery.png");
             pictureBox_battery.SizeMode = PictureBoxSizeMode.StretchImage;
 
-            /*************** Home Tab ******************/
+            // ^^^ END of diagnostics section ^^^ //
+
+            /************************ TAB DESIGN *************************/
+            /*
+             * Section for designing each tab, tabs are seperated by name
+             * Includes all tab customization
+             */
+
+            /*************** HOME TAB ******************/
             Label label_home = new Label()
             {
                 Name = "Home Tab",
@@ -151,6 +160,19 @@ namespace WinFormsCarStarter
                 Location = new Point(102, 20),
             };
             panel_home.Controls.Add(label_home);
+
+            // TODO  - add color to bar and decide if engine temp or outdoor temp
+            progressBar_temp = new ProgressBar()
+            {
+                Location = new Point(10, 80),
+                Size = new Size(85, 5),
+                ForeColor = Color.Purple,
+                Minimum = 0,
+                Maximum = 100,
+                Value = 40,
+                MarqueeAnimationSpeed = 0,
+            };
+            panel_home.Controls.Add(progressBar_temp);
 
 
             // Start/Stop Button
@@ -177,6 +199,8 @@ namespace WinFormsCarStarter
                 ForeColor = Color.Black,
             };
             roundButton_lock.Click += roundButton_lock_Click;
+            roundButton_lock.MouseEnter += RoundButton_lockUnlock_MouseEnter;
+            roundButton_lock.MouseLeave += RoundButton_lockUnlock_MouseLeave;
             panel_home.Controls.Add(roundButton_lock);
 
 
@@ -191,43 +215,52 @@ namespace WinFormsCarStarter
                 ForeColor = Color.Black,
             };
             roundButton_unlock.Click += roundButton_unlock_Click;
+            roundButton_unlock.MouseEnter += RoundButton_lockUnlock_MouseEnter;
+            roundButton_unlock.MouseLeave += RoundButton_lockUnlock_MouseLeave;
             panel_home.Controls.Add(roundButton_unlock);
 
             // ******** Slide Up Panel Home Tab ************/
+            // slide constraints
             collapsedTop = panel_home.Height - 125;
             expandedTop = panel_home.Height - 200;
-            
+
+            // Panel that will slide upwards
             slidePanel = new Panel
             {
                 Height = 200,
                 Width = this.ClientSize.Width,
                 Top = collapsedTop,
                 Left = 0,
-                BackColor = Color.FromArgb(125,125,125),
+                BackColor = Color.FromArgb(175, 175, 175),
                 Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
             };
             panel_home.Controls.Add(slidePanel);
+            CornerRadius(slidePanel, 20);
 
+            // Slide panel functionality
             slidePanel.MouseDown += SlidePanel_MouseDown;
             slidePanel.MouseMove += SlidePanel_MouseMove;
             slidePanel.MouseUp += SlidePanel_MouseUp;
-            CornerRadius(slidePanel, 20);
 
+            // Handle for slide panel
             Panel handleBar = new Panel
             {
                 Size = new Size(100, 5),
-                BackColor = Color.FromArgb(100,100,100),
+                BackColor = Color.FromArgb(125, 125, 125),
                 Location = new Point((slidePanel.Width - 100) / 2, 5),
                 Cursor = Cursors.Hand
             };
             slidePanel.Controls.Add(handleBar);
+            CornerRadius(handleBar, 20);
 
+            // Handle bar functionality
             handleBar.MouseDown += SlidePanel_MouseDown;
             handleBar.MouseMove += SlidePanel_MouseMove;
             handleBar.MouseUp += SlidePanel_MouseUp;
-            CornerRadius(handleBar, 20);
+
 
             /********* Slide Panel Buttons **********/
+            // Button for turning on and off vehicle headlights
             Button button_lights = new Button
             {
                 Size = new Size(75, 50),
@@ -242,7 +275,8 @@ namespace WinFormsCarStarter
             CornerRadius(button_lights, 10);
             slidePanel.Controls.Add(button_lights);
 
-            Button button_hazards = new Button 
+            // Button for turning on and off vehicle hazards
+            Button button_hazards = new Button
             {
                 Size = new Size(75, 50),
                 Location = new Point(95, 15),
@@ -256,6 +290,7 @@ namespace WinFormsCarStarter
             CornerRadius(button_hazards, 10);
             slidePanel.Controls.Add(button_hazards);
 
+            // Button for honking the vehicles horn 
             Button button_horn = new Button
             {
                 Size = new Size(75, 50),
@@ -269,6 +304,8 @@ namespace WinFormsCarStarter
             button_horn.FlatAppearance.BorderColor = Color.Black;
             CornerRadius(button_horn, 10);
             slidePanel.Controls.Add(button_horn);
+
+            // ^^^ END of diagnostics section ^^^ //
         }
 
         /************** GLOBAL METHODS *************/
@@ -382,20 +419,32 @@ namespace WinFormsCarStarter
 
             if (isToggled)
             {
-                senderButton.BackColor = Color.Red;  
+                senderButton.BackColor = Color.Red;
                 senderButton.Text = "STOP";
                 senderButton.Font = new Font("Segoe UI", 12, FontStyle.Regular);
                 ShowNotification("Vehicle Started Successfully", "success");
             }
             else
             {
-                senderButton.BackColor = Color.Green;  
+                senderButton.BackColor = Color.Green;
                 senderButton.Text = "Start";
                 senderButton.Font = new Font("Segoe UI", 12, FontStyle.Regular);
                 ShowNotification("Vehicle Stopped Succesfuly", "stop");
             }
 
-            senderButton.Invalidate(); 
+            senderButton.Invalidate();
+        }
+
+        private void RoundButton_lockUnlock_MouseEnter(object sender, EventArgs e)
+        {
+            var senderButton = (RoundButton)sender;
+            senderButton.BackColor = Color.FromArgb(147, 85, 219);
+        }
+
+        private void RoundButton_lockUnlock_MouseLeave(object sender, EventArgs e)
+        {
+            var senderButton = (RoundButton)sender;
+            senderButton.BackColor = Color.MediumPurple;
         }
 
         private void roundButton_lock_Click(object sender, EventArgs e)

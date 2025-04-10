@@ -13,14 +13,19 @@ namespace WinFormsCarStarter
 {
     public partial class Notification : Form
     {
+        // Global variables (specific to Notification)
         private System.Windows.Forms.Timer timer;
         private int notifTime = 2000;
         private int fade = 0;
         private Form parentForm;
 
+        // Notification class for implementing notifications to main form (MainForm) 
+        // can set message, color, and which form to pop up notification in
         public Notification(string message, Color backColor, Form parent)
         {
             InitializeComponent();
+
+            // Notification appearance
             FormBorderStyle = FormBorderStyle.None;
             StartPosition = FormStartPosition.Manual;
             BackColor = backColor;
@@ -28,11 +33,11 @@ namespace WinFormsCarStarter
             ShowInTaskbar = false;
             TopMost = true;
             parentForm = parent;
-
             Width = parent.Width - 20;
             Height = 40;
             Location = new Point(parent.Left + 10, parent.Top + 35);
 
+            // Label for specified message
             Label lbl = new Label()
             {
                 Text = message,
@@ -50,6 +55,7 @@ namespace WinFormsCarStarter
             timer.Tick += timer_Tick;
         }
 
+        // Shows notification on form
         protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
@@ -57,6 +63,7 @@ namespace WinFormsCarStarter
             timer.Start();
         }
 
+        // Timer for animating the notification (fades in then slowly fades out)
         private void timer_Tick(object sender, EventArgs e)
         {
             if (fade == 1) // Fade in

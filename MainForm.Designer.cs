@@ -36,6 +36,9 @@
             button_activity = new Button();
             panel_activity = new Panel();
             panel_status = new Panel();
+            progressBar_fuel = new ProgressBar();
+            progressBar_oil = new ProgressBar();
+            progressBar_temp = new ProgressBar();
             panel_profile = new Panel();
             panel_home = new Panel();
             panel_trips = new Panel();
@@ -47,6 +50,7 @@
             panel_tabContainer = new Panel();
             panel1.SuspendLayout();
             panel_activity.SuspendLayout();
+            panel_status.SuspendLayout();
             panel_trips.SuspendLayout();
             panel_diagnostics.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox_battery).BeginInit();
@@ -136,11 +140,35 @@
             // 
             // panel_status
             // 
+            panel_status.Controls.Add(progressBar_fuel);
+            panel_status.Controls.Add(progressBar_oil);
+            panel_status.Controls.Add(progressBar_temp);
             panel_status.Dock = DockStyle.Fill;
             panel_status.Location = new Point(0, 0);
             panel_status.Name = "panel_status";
             panel_status.Size = new Size(265, 415);
             panel_status.TabIndex = 0;
+            // 
+            // progressBar_fuel
+            // 
+            progressBar_fuel.Location = new Point(201, 52);
+            progressBar_fuel.Name = "progressBar_fuel";
+            progressBar_fuel.Size = new Size(52, 23);
+            progressBar_fuel.TabIndex = 2;
+            // 
+            // progressBar_oil
+            // 
+            progressBar_oil.Location = new Point(106, 52);
+            progressBar_oil.Name = "progressBar_oil";
+            progressBar_oil.Size = new Size(69, 23);
+            progressBar_oil.TabIndex = 1;
+            // 
+            // progressBar_temp
+            // 
+            progressBar_temp.Location = new Point(6, 52);
+            progressBar_temp.Name = "progressBar_temp";
+            progressBar_temp.Size = new Size(55, 23);
+            progressBar_temp.TabIndex = 0;
             // 
             // panel_profile
             // 
@@ -233,6 +261,7 @@
             Text = "Piper Auto Start";
             panel1.ResumeLayout(false);
             panel_activity.ResumeLayout(false);
+            panel_status.ResumeLayout(false);
             panel_trips.ResumeLayout(false);
             panel_diagnostics.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)pictureBox_battery).EndInit();
@@ -261,5 +290,8 @@
         private PictureBox pictureBox_wifi;
         private PictureBox pictureBox_connection;
         private PictureBox pictureBox_battery;
+        private ProgressBar progressBar_fuel;
+        private ProgressBar progressBar_oil;
+        private ProgressBar progressBar_temp;
     }
 }

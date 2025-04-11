@@ -73,7 +73,6 @@ namespace WinFormsCarStarter
             button_trips.TextAlign = ContentAlignment.BottomCenter;
             button_profile.TextAlign = ContentAlignment.BottomCenter;
 
-
             // Button Icons
             ImageList imageList = new ImageList();
             imageList.Images.Add("activity", Image.FromFile("icons\\activity.png"));
@@ -161,19 +160,71 @@ namespace WinFormsCarStarter
             };
             panel_home.Controls.Add(label_home);
 
-            // TODO  - add color to bar and decide if engine temp or outdoor temp
-            progressBar_temp = new ProgressBar()
+            // Picture box for temperature image
+            pictureBox_temp = new PictureBox()
             {
-                Location = new Point(10, 80),
-                Size = new Size(85, 5),
-                ForeColor = Color.Purple,
+                Image = Image.FromFile("icons\\temperature.png"),
+                Size = new Size(40, 40),
+                Location = new Point(30, 50),
+                SizeMode = PictureBoxSizeMode.StretchImage
+            };
+            panel_home.Controls.Add(pictureBox_temp);
+
+            // Progress bar for temperature (this will be temp of the vehicle engine ** how to show that it is engine temp??)
+            progressBar_temp = new ColoredProgressBar()
+            {
+                Location = new Point(8, 100),
+                Size = new Size(75, 7),
+                BarColor = Color.Purple,
                 Minimum = 0,
                 Maximum = 100,
-                Value = 40,
-                MarqueeAnimationSpeed = 0,
+                Value = 40
             };
             panel_home.Controls.Add(progressBar_temp);
 
+            // Picture box for oil image
+            pictureBox_oil = new PictureBox()
+            {
+                Image = Image.FromFile("icons\\oil.png"),
+                Size = new Size(50, 50),
+                Location = new Point(110, 50),
+                SizeMode = PictureBoxSizeMode.StretchImage
+            };
+            panel_home.Controls.Add(pictureBox_oil);
+
+            // Progress bar for oil level
+            progressBar_oil = new ColoredProgressBar()
+            {
+                Location = new Point(97, 100),
+                Size = new Size(75, 7),
+                BarColor = Color.Purple,
+                Minimum = 0,
+                Maximum = 100,
+                Value = 80
+            };
+            panel_home.Controls.Add(progressBar_oil);
+
+            // Picture box for fuel image
+            pictureBox_fuel = new PictureBox()
+            {
+                Image = Image.FromFile("icons\\fuel.png"),
+                Size = new Size(40, 40),
+                Location = new Point(205, 50),
+                SizeMode = PictureBoxSizeMode.StretchImage
+            };
+            panel_home.Controls.Add(pictureBox_fuel);
+
+            // Progress bar for fuel level
+            progressBar_fuel = new ColoredProgressBar()
+            {
+                Location = new Point(185, 100),
+                Size = new Size(75, 7),
+                BarColor = Color.Purple,
+                Minimum = 0,
+                Maximum = 100,
+                Value = 60
+            };
+            panel_home.Controls.Add(progressBar_fuel);
 
             // Start/Stop Button
             RoundButton roundButton_startStop = new RoundButton
@@ -264,7 +315,7 @@ namespace WinFormsCarStarter
             Button button_lights = new Button
             {
                 Size = new Size(75, 50),
-                Location = new Point(10, 15),
+                Location = new Point(10, 20),
                 Font = new Font("Segoe UI", 9, FontStyle.Regular),
                 Text = "Lights",
                 BackColor = Color.MediumPurple,
@@ -279,7 +330,7 @@ namespace WinFormsCarStarter
             Button button_hazards = new Button
             {
                 Size = new Size(75, 50),
-                Location = new Point(95, 15),
+                Location = new Point(95, 20),
                 Font = new Font("Segoe UI", 9, FontStyle.Regular),
                 Text = "Hazards",
                 BackColor = Color.MediumPurple,
@@ -294,7 +345,7 @@ namespace WinFormsCarStarter
             Button button_horn = new Button
             {
                 Size = new Size(75, 50),
-                Location = new Point(180, 15),
+                Location = new Point(180, 20),
                 Font = new Font("Segoe UI", 9, FontStyle.Regular),
                 Text = "Horn",
                 BackColor = Color.MediumPurple,
@@ -305,7 +356,37 @@ namespace WinFormsCarStarter
             CornerRadius(button_horn, 10);
             slidePanel.Controls.Add(button_horn);
 
-            // ^^^ END of diagnostics section ^^^ //
+            // Button for opening vehicle windows
+            Button button_windows = new Button
+            {
+                Size = new Size(75, 50),
+                Location = new Point(50, 80),
+                Font = new Font("Segoe UI", 9, FontStyle.Regular),
+                Text = "Windows",
+                BackColor = Color.MediumPurple,
+                FlatStyle = FlatStyle.Flat
+            };
+            button_windows.FlatAppearance.BorderSize = 2;
+            button_windows.FlatAppearance.BorderColor = Color.Black;
+            CornerRadius(button_windows, 10);
+            slidePanel.Controls.Add(button_windows);
+
+            // Button for turning on and off vehicle hazards
+            Button button_trunk = new Button
+            {
+                Size = new Size(75, 50),
+                Location = new Point(140, 80),
+                Font = new Font("Segoe UI", 9, FontStyle.Regular),
+                Text = "Open Trunk",
+                BackColor = Color.MediumPurple,
+                FlatStyle = FlatStyle.Flat
+            };
+            button_trunk.FlatAppearance.BorderSize = 2;
+            button_trunk.FlatAppearance.BorderColor = Color.Black;
+            CornerRadius(button_trunk, 10);
+            slidePanel.Controls.Add(button_trunk);
+
+            // ^^^ END of Home Tab section ^^^ //
         }
 
         /************** GLOBAL METHODS *************/
@@ -323,6 +404,7 @@ namespace WinFormsCarStarter
             visibleTab.Visible = true;
         }
 
+        // ShowNotification -- changes the notification color based on what type of notification it should be
         private void ShowNotification(string message, string type)
         {
             Color backColor;
@@ -330,7 +412,7 @@ namespace WinFormsCarStarter
             switch (type.ToLower())
             {
                 case "success":
-                    backColor = Color.Green; 
+                    backColor = Color.Green;
                     break;
                 case "stop":
                     backColor = Color.Red;
@@ -342,6 +424,19 @@ namespace WinFormsCarStarter
 
             Notification notification = new Notification(message, backColor, this);
             notification.Show();
+        }
+
+        // CornerRadius -- Rounded corners for buttons and panels
+        private void CornerRadius(Control control, int radius)
+        {
+            Rectangle bounds = control.ClientRectangle;
+            GraphicsPath path = new GraphicsPath();
+            path.AddArc(bounds.X, bounds.Y, radius, radius, 180, 90);
+            path.AddArc(bounds.Right - radius, bounds.Y, radius, radius, 270, 90);
+            path.AddArc(bounds.Right - radius, bounds.Bottom - radius, radius, radius, 0, 90);
+            path.AddArc(bounds.X, bounds.Bottom - radius, radius, radius, 90, 90);
+            path.CloseFigure();
+            control.Region = new Region(path);
         }
 
         /******************* TAB BUTTON METHODS ************************/
@@ -378,11 +473,11 @@ namespace WinFormsCarStarter
             else if (activeTab == button_profile)
                 button_profile.ImageIndex = 9;
         }
-        
+
         /************************ Bottom Tab Event Handlers ********************************/
         private void button_activity_Click(object sender, EventArgs e)
         {
-            ShowTab(panel_activity); 
+            ShowTab(panel_activity);
             ActiveTab(button_activity);
         }
 
@@ -579,18 +674,32 @@ namespace WinFormsCarStarter
             }
         }
 
-        // Rounded corners for buttons and panels
-        private void CornerRadius(Control control, int radius)
+        // ColoredProgressBar class for making a colored progress bar instead of green
+        public class ColoredProgressBar : ProgressBar
         {
-            Rectangle bounds = control.ClientRectangle;
-            GraphicsPath path = new GraphicsPath();
-            path.AddArc(bounds.X, bounds.Y, radius, radius, 180, 90);
-            path.AddArc(bounds.Right - radius, bounds.Y, radius, radius, 270, 90);
-            path.AddArc(bounds.Right - radius, bounds.Bottom - radius, radius, radius, 0, 90);
-            path.AddArc(bounds.X, bounds.Bottom - radius, radius, radius, 90, 90);
-            path.CloseFigure();
-            control.Region = new Region(path);
+            public Color BarColor { get; set; } = Color.MediumPurple;
+
+            public ColoredProgressBar()
+            {
+                this.SetStyle(ControlStyles.UserPaint, true);
+            }
+
+            protected override void OnPaint(PaintEventArgs e)
+            {
+                Rectangle rec = e.ClipRectangle;
+                if (ProgressBarRenderer.IsSupported)
+                    ProgressBarRenderer.DrawHorizontalBar(e.Graphics, rec);
+
+                rec.Width = (int)(rec.Width * ((double)Value / Maximum)) - 4;
+                rec.Height -= 4;
+
+                using (SolidBrush brush = new SolidBrush(BarColor))
+                {
+                    e.Graphics.FillRectangle(brush, 2, 2, rec.Width, rec.Height);
+                }
+            }
         }
+
+
     }
 }
-  

@@ -36,6 +36,9 @@
             button_activity = new Button();
             panel_activity = new Panel();
             panel_status = new Panel();
+            pictureBox_fuel = new PictureBox();
+            pictureBox_oil = new PictureBox();
+            pictureBox_temp = new PictureBox();
             progressBar_fuel = new ProgressBar();
             progressBar_oil = new ProgressBar();
             progressBar_temp = new ProgressBar();
@@ -51,6 +54,9 @@
             panel1.SuspendLayout();
             panel_activity.SuspendLayout();
             panel_status.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pictureBox_fuel).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)pictureBox_oil).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)pictureBox_temp).BeginInit();
             panel_trips.SuspendLayout();
             panel_diagnostics.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox_battery).BeginInit();
@@ -140,6 +146,9 @@
             // 
             // panel_status
             // 
+            panel_status.Controls.Add(pictureBox_fuel);
+            panel_status.Controls.Add(pictureBox_oil);
+            panel_status.Controls.Add(pictureBox_temp);
             panel_status.Controls.Add(progressBar_fuel);
             panel_status.Controls.Add(progressBar_oil);
             panel_status.Controls.Add(progressBar_temp);
@@ -148,6 +157,30 @@
             panel_status.Name = "panel_status";
             panel_status.Size = new Size(265, 415);
             panel_status.TabIndex = 0;
+            // 
+            // pictureBox_fuel
+            // 
+            pictureBox_fuel.Location = new Point(201, 7);
+            pictureBox_fuel.Name = "pictureBox_fuel";
+            pictureBox_fuel.Size = new Size(51, 39);
+            pictureBox_fuel.TabIndex = 5;
+            pictureBox_fuel.TabStop = false;
+            // 
+            // pictureBox_oil
+            // 
+            pictureBox_oil.Location = new Point(106, 10);
+            pictureBox_oil.Name = "pictureBox_oil";
+            pictureBox_oil.Size = new Size(59, 36);
+            pictureBox_oil.TabIndex = 4;
+            pictureBox_oil.TabStop = false;
+            // 
+            // pictureBox_temp
+            // 
+            pictureBox_temp.Location = new Point(21, 21);
+            pictureBox_temp.Name = "pictureBox_temp";
+            pictureBox_temp.Size = new Size(34, 25);
+            pictureBox_temp.TabIndex = 3;
+            pictureBox_temp.TabStop = false;
             // 
             // progressBar_fuel
             // 
@@ -262,6 +295,9 @@
             panel1.ResumeLayout(false);
             panel_activity.ResumeLayout(false);
             panel_status.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)pictureBox_fuel).EndInit();
+            ((System.ComponentModel.ISupportInitialize)pictureBox_oil).EndInit();
+            ((System.ComponentModel.ISupportInitialize)pictureBox_temp).EndInit();
             panel_trips.ResumeLayout(false);
             panel_diagnostics.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)pictureBox_battery).EndInit();
@@ -293,5 +329,8 @@
         private ProgressBar progressBar_fuel;
         private ProgressBar progressBar_oil;
         private ProgressBar progressBar_temp;
+        private PictureBox pictureBox_fuel;
+        private PictureBox pictureBox_oil;
+        private PictureBox pictureBox_temp;
     }
 }

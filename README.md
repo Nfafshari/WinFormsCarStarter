@@ -1,7 +1,7 @@
 # WinForms Car Starter Application
 This is our teams car starter application using WinForms
 
-Tech Stack: C#, Windows Forms, (INSERT DATABASE)
+Tech Stack: C#, Windows Forms, SQLite/SQL
 
 ### To get set up:
 1. Clone this repository by using: `git clone https://github.com/Nfafshari/WinFormsCarStarter/tree/master`  

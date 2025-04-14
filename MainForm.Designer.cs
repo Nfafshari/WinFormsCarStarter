@@ -39,9 +39,6 @@
             pictureBox_fuel = new PictureBox();
             pictureBox_oil = new PictureBox();
             pictureBox_temp = new PictureBox();
-            progressBar_fuel = new ProgressBar();
-            progressBar_oil = new ProgressBar();
-            progressBar_temp = new ProgressBar();
             panel_profile = new Panel();
             panel_home = new Panel();
             panel_trips = new Panel();
@@ -149,9 +146,6 @@
             panel_status.Controls.Add(pictureBox_fuel);
             panel_status.Controls.Add(pictureBox_oil);
             panel_status.Controls.Add(pictureBox_temp);
-            panel_status.Controls.Add(progressBar_fuel);
-            panel_status.Controls.Add(progressBar_oil);
-            panel_status.Controls.Add(progressBar_temp);
             panel_status.Dock = DockStyle.Fill;
             panel_status.Location = new Point(0, 0);
             panel_status.Name = "panel_status";
@@ -181,27 +175,6 @@
             pictureBox_temp.Size = new Size(34, 25);
             pictureBox_temp.TabIndex = 3;
             pictureBox_temp.TabStop = false;
-            // 
-            // progressBar_fuel
-            // 
-            progressBar_fuel.Location = new Point(201, 52);
-            progressBar_fuel.Name = "progressBar_fuel";
-            progressBar_fuel.Size = new Size(52, 23);
-            progressBar_fuel.TabIndex = 2;
-            // 
-            // progressBar_oil
-            // 
-            progressBar_oil.Location = new Point(106, 52);
-            progressBar_oil.Name = "progressBar_oil";
-            progressBar_oil.Size = new Size(69, 23);
-            progressBar_oil.TabIndex = 1;
-            // 
-            // progressBar_temp
-            // 
-            progressBar_temp.Location = new Point(6, 52);
-            progressBar_temp.Name = "progressBar_temp";
-            progressBar_temp.Size = new Size(55, 23);
-            progressBar_temp.TabIndex = 0;
             // 
             // panel_profile
             // 
@@ -326,9 +299,6 @@
         private PictureBox pictureBox_wifi;
         private PictureBox pictureBox_connection;
         private PictureBox pictureBox_battery;
-        private ProgressBar progressBar_fuel;
-        private ProgressBar progressBar_oil;
-        private ProgressBar progressBar_temp;
         private PictureBox pictureBox_fuel;
         private PictureBox pictureBox_oil;
         private PictureBox pictureBox_temp;

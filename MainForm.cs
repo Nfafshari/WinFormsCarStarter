@@ -9,16 +9,25 @@ namespace WinFormsCarStarter
 {
     public partial class MainForm : Form
     {
-        // Global variables (private to MainForm)
+        // **** Global variables (private to MainForm) **** //
+        // Home Tab Variables
         private ImageList imageList = new ImageList();
         private ImageList active_imageList = new ImageList();
-        private bool isToggled = false;
+        private ProgressBar progressBar_temp = new ProgressBar();
+        private ProgressBar progressBar_oil = new ProgressBar();
+        private ProgressBar progressBar_fuel = new ProgressBar();
+        private bool isStartStopToggled = false;
+        private bool isLightsToggled = false;
+        private bool isHazardsToggled = false;
+        private bool isWindowsToggled = false;
         private Panel slidePanel;
         private bool isDragging = false;
         private int dragStart;
         private int originalPanelTop;
         private int collapsedTop;
         private int expandedTop;
+
+
 
         public MainForm()
         {
@@ -208,8 +217,8 @@ namespace WinFormsCarStarter
             pictureBox_fuel = new PictureBox()
             {
                 Image = Image.FromFile("icons\\fuel.png"),
-                Size = new Size(40, 40),
-                Location = new Point(205, 50),
+                Size = new Size(35, 35),
+                Location = new Point(205, 51),
                 SizeMode = PictureBoxSizeMode.StretchImage
             };
             panel_home.Controls.Add(pictureBox_fuel);
@@ -316,14 +325,15 @@ namespace WinFormsCarStarter
             {
                 Size = new Size(75, 50),
                 Location = new Point(10, 20),
-                Font = new Font("Segoe UI", 9, FontStyle.Regular),
-                Text = "Lights",
+                Font = new Font("Segoe UI", 8, FontStyle.Regular),
+                Text = "Turn Lights On",
                 BackColor = Color.MediumPurple,
                 FlatStyle = FlatStyle.Flat
             };
             button_lights.FlatAppearance.BorderSize = 2;
             button_lights.FlatAppearance.BorderColor = Color.Black;
             CornerRadius(button_lights, 10);
+            button_lights.Click += button_lights_Click;
             slidePanel.Controls.Add(button_lights);
 
             // Button for turning on and off vehicle hazards
@@ -331,14 +341,15 @@ namespace WinFormsCarStarter
             {
                 Size = new Size(75, 50),
                 Location = new Point(95, 20),
-                Font = new Font("Segoe UI", 9, FontStyle.Regular),
-                Text = "Hazards",
+                Font = new Font("Segoe UI", 7, FontStyle.Regular),
+                Text = "Turn Hazards On",
                 BackColor = Color.MediumPurple,
                 FlatStyle = FlatStyle.Flat
             };
             button_hazards.FlatAppearance.BorderSize = 2;
             button_hazards.FlatAppearance.BorderColor = Color.Black;
             CornerRadius(button_hazards, 10);
+            button_hazards.Click += button_hazards_Click;
             slidePanel.Controls.Add(button_hazards);
 
             // Button for honking the vehicles horn 
@@ -354,6 +365,7 @@ namespace WinFormsCarStarter
             button_horn.FlatAppearance.BorderSize = 2;
             button_horn.FlatAppearance.BorderColor = Color.Black;
             CornerRadius(button_horn, 10);
+            button_horn.Click += button_horn_Click;
             slidePanel.Controls.Add(button_horn);
 
             // Button for opening vehicle windows
@@ -361,14 +373,15 @@ namespace WinFormsCarStarter
             {
                 Size = new Size(75, 50),
                 Location = new Point(50, 80),
-                Font = new Font("Segoe UI", 9, FontStyle.Regular),
-                Text = "Windows",
+                Font = new Font("Segoe UI", 8, FontStyle.Regular),
+                Text = "Open Windows",
                 BackColor = Color.MediumPurple,
                 FlatStyle = FlatStyle.Flat
             };
             button_windows.FlatAppearance.BorderSize = 2;
             button_windows.FlatAppearance.BorderColor = Color.Black;
             CornerRadius(button_windows, 10);
+            button_windows.Click += button_windows_Click;
             slidePanel.Controls.Add(button_windows);
 
             // Button for turning on and off vehicle hazards
@@ -384,6 +397,7 @@ namespace WinFormsCarStarter
             button_trunk.FlatAppearance.BorderSize = 2;
             button_trunk.FlatAppearance.BorderColor = Color.Black;
             CornerRadius(button_trunk, 10);
+            button_trunk.Click += button_trunk_Click;
             slidePanel.Controls.Add(button_trunk);
 
             // ^^^ END of Home Tab section ^^^ //
@@ -510,9 +524,9 @@ namespace WinFormsCarStarter
         {
             var senderButton = (RoundButton)sender;
 
-            isToggled = !isToggled;
+            isStartStopToggled = !isStartStopToggled;
 
-            if (isToggled)
+            if (isStartStopToggled)
             {
                 senderButton.BackColor = Color.Red;
                 senderButton.Text = "STOP";
@@ -566,7 +580,6 @@ namespace WinFormsCarStarter
             int delta = Cursor.Position.Y - dragStart;
             int newTop = originalPanelTop + delta;
 
-            // Clamp between expanded and collapsed positions
             newTop = Math.Max(expandedTop, Math.Min(collapsedTop, newTop));
 
             slidePanel.Top = newTop;
@@ -576,6 +589,82 @@ namespace WinFormsCarStarter
         private void SlidePanel_MouseUp(object sender, MouseEventArgs e)
         {
             isDragging = false;
+        }
+
+        private void button_lights_Click(object sender, EventArgs e)
+        {
+            var senderButton = (Button)sender;
+
+            isLightsToggled = !isLightsToggled;
+
+            if (isLightsToggled)
+            {
+                senderButton.BackColor = Color.Red;
+                senderButton.Text = "Turn Lights OFF";
+                senderButton.Font = new Font("Segoe UI", 8, FontStyle.Regular);
+                ShowNotification("Vehicle Lights Turned On Successfully", "success");
+            }
+            else
+            {
+                senderButton.BackColor = Color.MediumPurple;
+                senderButton.Text = "Turn Lights On";
+                senderButton.Font = new Font("Segoe UI", 8, FontStyle.Regular);
+                ShowNotification("Vehicle Lights Turned OFF Successfully", "stop");
+            }
+        }
+
+        private void button_hazards_Click(object sender, EventArgs e)
+        {
+            var senderButton = (Button)sender;
+
+            isHazardsToggled = !isHazardsToggled;
+
+            if (isHazardsToggled)
+            {
+                senderButton.BackColor = Color.Red;
+                senderButton.Text = "Turn Hazards OFF";
+                senderButton.Font = new Font("Segoe UI", 7, FontStyle.Regular);
+                ShowNotification("Vehicle Hazards Turned On Successfully", "success");
+            }
+            else
+            {
+                senderButton.BackColor = Color.MediumPurple;
+                senderButton.Text = "Turn Hazards On";
+                senderButton.Font = new Font("Segoe UI", 7, FontStyle.Regular);
+                ShowNotification("Vehicle Hazards Turned OFF Successfully", "stop");
+            }
+        }
+
+        private void button_horn_Click(object sender, EventArgs e)
+        {
+            ShowNotification("Vehicle Horn Honked Successfully", "success");
+        }
+
+        private void button_windows_Click(object sender, EventArgs e)
+        {
+            var senderButton = (Button)sender;
+
+            isWindowsToggled = !isWindowsToggled;
+
+            if (isWindowsToggled)
+            {
+                senderButton.BackColor = Color.Red;
+                senderButton.Text = "CLOSE windows";
+                senderButton.Font = new Font("Segoe UI", 8, FontStyle.Regular);
+                ShowNotification("Vehicle Windows Opened Successfully", "success");
+            }
+            else
+            {
+                senderButton.BackColor = Color.MediumPurple;
+                senderButton.Text = "Open Windows";
+                senderButton.Font = new Font("Segoe UI", 8, FontStyle.Regular);
+                ShowNotification("Vehicle Windows CLOSED Successfully", "stop");
+            }
+        }
+
+        private void button_trunk_Click(object sender, EventArgs e)
+        {
+            ShowNotification("Vehicle Trunk Opened Successfully", "success");
         }
 
         /************************** ROUND BUTTON CLASS *********************************/

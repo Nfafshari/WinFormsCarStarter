@@ -29,16 +29,17 @@
         private void InitializeComponent()
         {
             panel1 = new Panel();
-            button_profile = new Button();
-            button_trips = new Button();
-            button_home = new Button();
-            button_status = new Button();
             button_activity = new Button();
+            button_status = new Button();
+            button_home = new Button();
+            button_trips = new Button();
+            button_profile = new Button();
             panel_activity = new Panel();
             panel_status = new Panel();
             pictureBox_fuel = new PictureBox();
             pictureBox_oil = new PictureBox();
             pictureBox_temp = new PictureBox();
+            panel_startUp = new Panel();
             panel_profile = new Panel();
             panel_home = new Panel();
             panel_trips = new Panel();
@@ -65,49 +66,27 @@
             // panel1
             // 
             panel1.BackColor = Color.White;
-            panel1.Controls.Add(button_profile);
-            panel1.Controls.Add(button_trips);
-            panel1.Controls.Add(button_home);
-            panel1.Controls.Add(button_status);
             panel1.Controls.Add(button_activity);
+            panel1.Controls.Add(button_status);
+            panel1.Controls.Add(button_home);
+            panel1.Controls.Add(button_trips);
+            panel1.Controls.Add(button_profile);
             panel1.Dock = DockStyle.Bottom;
             panel1.Location = new Point(0, 438);
             panel1.Name = "panel1";
             panel1.Size = new Size(265, 46);
             panel1.TabIndex = 0;
             // 
-            // button_profile
+            // button_activity
             // 
-            button_profile.FlatStyle = FlatStyle.Flat;
-            button_profile.Location = new Point(211, 0);
-            button_profile.Name = "button_profile";
-            button_profile.Size = new Size(54, 46);
-            button_profile.TabIndex = 4;
-            button_profile.Text = "Profile";
-            button_profile.UseVisualStyleBackColor = true;
-            button_profile.Click += button_profile_Click;
-            // 
-            // button_trips
-            // 
-            button_trips.FlatStyle = FlatStyle.Flat;
-            button_trips.Location = new Point(157, 0);
-            button_trips.Name = "button_trips";
-            button_trips.Size = new Size(56, 46);
-            button_trips.TabIndex = 3;
-            button_trips.Text = "Trips";
-            button_trips.UseVisualStyleBackColor = true;
-            button_trips.Click += button_trips_Click;
-            // 
-            // button_home
-            // 
-            button_home.FlatStyle = FlatStyle.Flat;
-            button_home.Location = new Point(106, 0);
-            button_home.Name = "button_home";
-            button_home.Size = new Size(53, 46);
-            button_home.TabIndex = 2;
-            button_home.Text = "Home";
-            button_home.UseVisualStyleBackColor = true;
-            button_home.Click += button_home_Click;
+            button_activity.FlatStyle = FlatStyle.Flat;
+            button_activity.Location = new Point(0, 0);
+            button_activity.Name = "button_activity";
+            button_activity.Size = new Size(55, 46);
+            button_activity.TabIndex = 0;
+            button_activity.Text = "Activity";
+            button_activity.UseVisualStyleBackColor = true;
+            button_activity.Click += button_activity_Click;
             // 
             // button_status
             // 
@@ -120,16 +99,38 @@
             button_status.UseVisualStyleBackColor = true;
             button_status.Click += button_status_Click;
             // 
-            // button_activity
+            // button_home
             // 
-            button_activity.FlatStyle = FlatStyle.Flat;
-            button_activity.Location = new Point(0, 0);
-            button_activity.Name = "button_activity";
-            button_activity.Size = new Size(55, 46);
-            button_activity.TabIndex = 0;
-            button_activity.Text = "Activity";
-            button_activity.UseVisualStyleBackColor = true;
-            button_activity.Click += button_activity_Click;
+            button_home.FlatStyle = FlatStyle.Flat;
+            button_home.Location = new Point(106, 0);
+            button_home.Name = "button_home";
+            button_home.Size = new Size(53, 46);
+            button_home.TabIndex = 2;
+            button_home.Text = "Home";
+            button_home.UseVisualStyleBackColor = true;
+            button_home.Click += button_home_Click;
+            // 
+            // button_trips
+            // 
+            button_trips.FlatStyle = FlatStyle.Flat;
+            button_trips.Location = new Point(157, 0);
+            button_trips.Name = "button_trips";
+            button_trips.Size = new Size(56, 46);
+            button_trips.TabIndex = 3;
+            button_trips.Text = "Trips";
+            button_trips.UseVisualStyleBackColor = true;
+            button_trips.Click += button_trips_Click;
+            // 
+            // button_profile
+            // 
+            button_profile.FlatStyle = FlatStyle.Flat;
+            button_profile.Location = new Point(211, 0);
+            button_profile.Name = "button_profile";
+            button_profile.Size = new Size(54, 46);
+            button_profile.TabIndex = 4;
+            button_profile.Text = "Profile";
+            button_profile.UseVisualStyleBackColor = true;
+            button_profile.Click += button_profile_Click;
             // 
             // panel_activity
             // 
@@ -146,6 +147,7 @@
             panel_status.Controls.Add(pictureBox_fuel);
             panel_status.Controls.Add(pictureBox_oil);
             panel_status.Controls.Add(pictureBox_temp);
+            panel_status.Controls.Add(panel_startUp);
             panel_status.Dock = DockStyle.Fill;
             panel_status.Location = new Point(0, 0);
             panel_status.Name = "panel_status";
@@ -175,6 +177,13 @@
             pictureBox_temp.Size = new Size(34, 25);
             pictureBox_temp.TabIndex = 3;
             pictureBox_temp.TabStop = false;
+            // 
+            // panel_startUp
+            // 
+            panel_startUp.Location = new Point(0, -2);
+            panel_startUp.Name = "panel_startUp";
+            panel_startUp.Size = new Size(268, 461);
+            panel_startUp.TabIndex = 0;
             // 
             // panel_profile
             // 
@@ -231,9 +240,9 @@
             // 
             // pictureBox_wifi
             // 
-            pictureBox_wifi.Location = new Point(205, 5);
+            pictureBox_wifi.Location = new Point(201, 5);
             pictureBox_wifi.Name = "pictureBox_wifi";
-            pictureBox_wifi.Size = new Size(15, 15);
+            pictureBox_wifi.Size = new Size(19, 13);
             pictureBox_wifi.TabIndex = 1;
             pictureBox_wifi.TabStop = false;
             // 
@@ -281,7 +290,7 @@
         }
 
         #endregion
-
+        private Panel panel_startUp;
         private Panel panel1;
         private Button button_profile;
         private Button button_trips;

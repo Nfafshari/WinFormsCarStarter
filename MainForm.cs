@@ -24,11 +24,6 @@ namespace WinFormsCarStarter
         private TextBox textBox_password = new TextBox();
         private ComboBox comboBox_vehicleType = new ComboBox();
         private Panel slidePanel;
-        private Panel panel_welcome;
-        private Label label_welcome;
-        private System.Windows.Forms.Timer timer_welcomeAnimIn;
-        private System.Windows.Forms.Timer timer_welcomeAnimOut;
-        private float opacityLevel = 0f;
         private bool isStartStopToggled = false;
         private bool isLightsToggled = false;
         private bool isHazardsToggled = false;
@@ -326,7 +321,6 @@ namespace WinFormsCarStarter
             /*************** HOME TAB ******************/
             Label label_home = new Label()
             {
-                Name = "Home Tab",
                 Text = "Home",
                 Font = new Font("Segoe UI", 14, FontStyle.Bold),
                 Location = new Point(102, 20),
@@ -355,6 +349,16 @@ namespace WinFormsCarStarter
             };
             panel_home.Controls.Add(progressBar_temp);
 
+            Label label_temperature = new Label()
+            {
+                Location = new Point(8, 100),
+                AutoSize = true,
+                Text = "Engine Temp",
+                Font = new Font("Segoe UI", 8),
+                ForeColor = Color.Gray,
+            };
+            panel_home.Controls.Add(label_temperature);
+
             // Picture box for oil image
             pictureBox_oil = new PictureBox()
             {
@@ -377,6 +381,16 @@ namespace WinFormsCarStarter
             };
             panel_home.Controls.Add(progressBar_oil);
 
+            Label label_oil = new Label()
+            {
+                Location = new Point(105, 100),
+                AutoSize = true,
+                Text = "Oil Level",
+                Font = new Font("Segoe UI", 8),
+                ForeColor = Color.Gray,
+            };
+            panel_home.Controls.Add(label_oil);
+
             // Picture box for fuel image
             pictureBox_fuel = new PictureBox()
             {
@@ -398,6 +412,16 @@ namespace WinFormsCarStarter
                 Value = 60
             };
             panel_home.Controls.Add(progressBar_fuel);
+
+            Label label_fuel = new Label()
+            {
+                Location = new Point(192, 100),
+                AutoSize = true,
+                Text = "Fuel Level",
+                Font = new Font("Segoe UI", 8),
+                ForeColor = Color.Gray,
+            };
+            panel_home.Controls.Add(label_fuel);
 
             // Start/Stop Button
             RoundButton roundButton_startStop = new RoundButton
@@ -649,94 +673,6 @@ namespace WinFormsCarStarter
                 button_profile.ImageIndex = 9;
         }
 
-        private void WelcomeAnimation(string driver)
-        {
-            panel_startUp.Visible = false;
-
-            panel_welcome = new Panel()
-            {
-                Dock = DockStyle.Fill,
-                BackColor = Color.MediumPurple,
-                Visible = true
-            };
-            this.Controls.Add(panel_welcome);
-            panel_welcome.BringToFront();
-
-            label_welcome = new Label()
-            {
-                Location = new Point(10, 15),
-                Size = new Size(200, 150),
-                Text = $"Welcome {driver}, to Piper Autostart!",
-                Font = new Font("Segoe UI", 16, FontStyle.Bold),
-                TextAlign = ContentAlignment.MiddleCenter,
-            };
-            panel_welcome.Controls.Add(label_welcome);
-
-            timer_welcomeAnimIn = new System.Windows.Forms.Timer();
-            timer_welcomeAnimIn.Interval = 20;
-            timer_welcomeAnimIn.Tick += timer_welcomeAnim_Tick;
-            timer_welcomeAnimIn.Start();
-        }
-
-        private void timer_welcomeAnim_Tick(object sender, EventArgs e)
-        {
-            if (opacityLevel < 1f)
-            {
-                opacityLevel += 0.05f;
-                int alpha = (int)(opacityLevel * 255);
-                label_welcome.ForeColor = Color.FromArgb(alpha, 255, 255, 255);
-            }
-            else
-            {
-                timer_welcomeAnimIn.Stop();
-                timer_welcomeAnimIn.Dispose();
-
-                // Pause briefly before fade-out
-                System.Windows.Forms.Timer pauseTimer = new System.Windows.Forms.Timer();
-                pauseTimer.Interval = 1500; // 1.5 seconds pause
-                pauseTimer.Tick += (s, evt) =>
-                {
-                    pauseTimer.Stop();
-                    pauseTimer.Dispose();
-                    StartFadeOut(); // Start fading out
-                };
-                pauseTimer.Start();
-            }
-        }
-
-        private void StartFadeOut()
-        {
-            timer_welcomeAnimOut = new System.Windows.Forms.Timer();
-            timer_welcomeAnimOut.Interval = 30;
-            timer_welcomeAnimOut.Tick += Timer_FadeOut_Tick;
-            timer_welcomeAnimOut.Start();
-        }
-
-        private void Timer_FadeOut_Tick(object sender, EventArgs e)
-        {
-            if (opacityLevel > 0f)
-            {
-                opacityLevel -= 0.05f;
-                int alpha = (int)(opacityLevel * 255);
-                label_welcome.ForeColor = Color.FromArgb(alpha, 0, 0, 0);
-            }
-            else
-            {
-                timer_welcomeAnimOut.Stop();
-                timer_welcomeAnimOut.Dispose();
-
-                // Done fading — remove panel and show app
-                this.Controls.Remove(panel_welcome);
-                panel_welcome.Dispose();
-
-                ShowTab(panel_home);
-
-                panel1.Visible = true;
-                panel2.Visible = true;
-
-                ActiveTab(button_home);
-            }
-        }
 
         private void InsertUser()
         {
@@ -762,7 +698,12 @@ namespace WinFormsCarStarter
                     try
                     {
                         cmd.ExecuteNonQuery();
-                        WelcomeAnimation(textBox_firstName.Text);
+                        ShowTab(panel_home);
+                        panel_startUp.Dispose();
+                        panel1.Visible = true;
+                        panel2.Visible = true;
+                        ActiveTab(button_home);
+                        ShowNotification($"Welcome {textBox_firstName.Text}, to Piper Autostart!", "");
                     }
                     catch (SqliteException ex)
                     {

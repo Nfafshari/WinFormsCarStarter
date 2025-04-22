@@ -121,7 +121,7 @@ namespace WinFormsCarStarter
             button_trips.ImageAlign = ContentAlignment.TopCenter;
             button_profile.ImageAlign = ContentAlignment.TopCenter;
 
-            // ******************** INITIAL STARTUP SCREEN ********************* //
+            // ******************** DATABASE SETUP ******************** //  
             // Database file
             string dbPath = "carstarter.db";
             string connectionString = $"Data Source={dbPath};";
@@ -130,8 +130,7 @@ namespace WinFormsCarStarter
             {
                 connection.Open();
 
-                // Create the table if it doesn't exist
-                string tableCmd = @"
+                string userTableCmd = @"
                     CREATE TABLE IF NOT EXISTS Users (
                         Id INTEGER PRIMARY KEY AUTOINCREMENT,
                         FirstName TEXT NOT NULL,
@@ -141,10 +140,23 @@ namespace WinFormsCarStarter
                         CarType TEXT
                     );";
 
-                var createTable = new SqliteCommand(tableCmd, connection);
-                createTable.ExecuteNonQuery();
+                var createUserTable = new SqliteCommand(userTableCmd, connection);
+                createUserTable.ExecuteNonQuery();
+
+                string activityTableCmd = @"
+                    CREATE TABLE IF NOT EXISTS ActivityLog (
+                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        Date TEXT NOT NULL 
+                        Time TEXT NOT NULL,
+                        Activity TEXT NOT NULL,
+                        IsStartEvent INTEGER NOT NULL
+                    );";
+
+                var createActivityLog = new SqliteCommand(activityTableCmd, connection);
+                createActivityLog.ExecuteNonQuery();
             }
 
+            // ******************** INITIAL STARTUP SCREEN ********************* //
             // Hide these panels until user logs in
             panel1.Visible = false;
             panel2.Visible = false;
@@ -587,6 +599,9 @@ namespace WinFormsCarStarter
             slidePanel.Controls.Add(button_trunk);
 
             // ^^^ END of Home Tab section ^^^ //
+
+            // *********************** Activity Tab *********************** //
+
         }
 
         /************** GLOBAL METHODS *************/
@@ -673,7 +688,7 @@ namespace WinFormsCarStarter
                 button_profile.ImageIndex = 9;
         }
 
-
+        // InsertUser -- inserts user information into database
         private void InsertUser()
         {
             string dbPath = "carstarter.db";
@@ -703,7 +718,7 @@ namespace WinFormsCarStarter
                         panel1.Visible = true;
                         panel2.Visible = true;
                         ActiveTab(button_home);
-                        ShowNotification($"Welcome {textBox_firstName.Text}, to Piper Autostart!", "");
+                        ShowNotification($"Welcome, to Piper Autostart!", "");
                     }
                     catch (SqliteException ex)
                     {
@@ -713,7 +728,28 @@ namespace WinFormsCarStarter
             }
         }
 
-        // delete tables on close
+        private void LogActivity(string message, bool isStartEvent) 
+        {
+            using (var connection = new SqliteConnection("Data Source=carstarter.db"))
+            {
+                connection.Open();
+
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                    INSERT INTO ActivityLog (Date, Time, Activity, IsStartEvent)
+                    VALUES ($Date, $Time, $Activity, $IsStartEvent)";
+
+                command.Parameters.AddWithValue("$Date", DateTime.Now.ToString("MMM-dd-yyyy"));
+                command.Parameters.AddWithValue("$Time", DateTime.Now.ToString("hh:mm:ss"));
+                command.Parameters.AddWithValue("$Activity", message);
+                command.Parameters.AddWithValue("$IsStartEvent", isStartEvent ? 1 : 0);
+
+
+                command.ExecuteNonQuery();
+            }
+        }
+
+        // TruncateTables -- deletes table information on close
         private void TruncateTables()
         {
             try
@@ -823,6 +859,7 @@ namespace WinFormsCarStarter
                 senderButton.Text = "STOP";
                 senderButton.Font = new Font("Segoe UI", 12, FontStyle.Regular);
                 ShowNotification("Vehicle Started Successfully", "success");
+                LogActivity("Vehicle Started", true);
             }
             else
             {
@@ -830,6 +867,7 @@ namespace WinFormsCarStarter
                 senderButton.Text = "Start";
                 senderButton.Font = new Font("Segoe UI", 12, FontStyle.Regular);
                 ShowNotification("Vehicle Stopped Succesfuly", "stop");
+                LogActivity("Vehicle Stopped", false);
             }
 
             senderButton.Invalidate();
@@ -850,11 +888,13 @@ namespace WinFormsCarStarter
         private void roundButton_lock_Click(object sender, EventArgs e)
         {
             ShowNotification("Vehicle Locked Successfully", "success");
+            LogActivity("Vehicle Locked", false);
         }
 
         private void roundButton_unlock_Click(object sender, EventArgs e)
         {
             ShowNotification("Vehicle Unlocked Successfully", "success");
+            LogActivity("Vehicle Unlocked", true);
         }
 
         private void SlidePanel_MouseDown(object sender, MouseEventArgs e)
@@ -894,6 +934,7 @@ namespace WinFormsCarStarter
                 senderButton.Text = "Turn Lights OFF";
                 senderButton.Font = new Font("Segoe UI", 8, FontStyle.Regular);
                 ShowNotification("Vehicle Lights Turned On Successfully", "success");
+                LogActivity("Vehicle Lights Turned On", true);
             }
             else
             {
@@ -901,6 +942,7 @@ namespace WinFormsCarStarter
                 senderButton.Text = "Turn Lights On";
                 senderButton.Font = new Font("Segoe UI", 8, FontStyle.Regular);
                 ShowNotification("Vehicle Lights Turned OFF Successfully", "stop");
+                LogActivity("Vehicle Lights Turned Off", false);
             }
         }
 
@@ -916,6 +958,7 @@ namespace WinFormsCarStarter
                 senderButton.Text = "Turn Hazards OFF";
                 senderButton.Font = new Font("Segoe UI", 7, FontStyle.Regular);
                 ShowNotification("Vehicle Hazards Turned On Successfully", "success");
+                LogActivity("Vehicle Hazards Turned On", true);
             }
             else
             {
@@ -923,12 +966,14 @@ namespace WinFormsCarStarter
                 senderButton.Text = "Turn Hazards On";
                 senderButton.Font = new Font("Segoe UI", 7, FontStyle.Regular);
                 ShowNotification("Vehicle Hazards Turned OFF Successfully", "stop");
+                LogActivity("Vehicle Hazards Turned Off", false);
             }
         }
 
         private void button_horn_Click(object sender, EventArgs e)
         {
             ShowNotification("Vehicle Horn Honked Successfully", "success");
+            LogActivity("Vehicle Horn Honked", true);
         }
 
         private void button_windows_Click(object sender, EventArgs e)
@@ -943,6 +988,7 @@ namespace WinFormsCarStarter
                 senderButton.Text = "CLOSE windows";
                 senderButton.Font = new Font("Segoe UI", 8, FontStyle.Regular);
                 ShowNotification("Vehicle Windows Opened Successfully", "success");
+                LogActivity("Vehicle Windows Opened", true);
             }
             else
             {
@@ -950,12 +996,14 @@ namespace WinFormsCarStarter
                 senderButton.Text = "Open Windows";
                 senderButton.Font = new Font("Segoe UI", 8, FontStyle.Regular);
                 ShowNotification("Vehicle Windows CLOSED Successfully", "stop");
+                LogActivity("Vehicle Windows Closed", false);
             }
         }
 
         private void button_trunk_Click(object sender, EventArgs e)
         {
             ShowNotification("Vehicle Trunk Opened Successfully", "success");
+            LogActivity("Vehicle Trunk Opened", true);
         }
 
         /************************** ROUND BUTTON CLASS *********************************/

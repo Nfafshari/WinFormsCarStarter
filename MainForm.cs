@@ -4,6 +4,8 @@ using System.Drawing.Imaging;
 using System.Windows.Forms;
 using static WinFormsCarStarter.MainForm;
 using System.Runtime.CompilerServices;
+using Microsoft.Data.Sqlite;
+using System.IO;
 
 namespace WinFormsCarStarter
 {
@@ -16,11 +18,21 @@ namespace WinFormsCarStarter
         private ProgressBar progressBar_temp = new ProgressBar();
         private ProgressBar progressBar_oil = new ProgressBar();
         private ProgressBar progressBar_fuel = new ProgressBar();
+        private TextBox textBox_firstName = new TextBox();
+        private TextBox textBox_lastName = new TextBox();
+        private TextBox textBox_email = new TextBox();
+        private TextBox textBox_password = new TextBox();
+        private ComboBox comboBox_vehicleType = new ComboBox();
+        private Panel slidePanel;
+        private Panel panel_welcome;
+        private Label label_welcome;
+        private System.Windows.Forms.Timer timer_welcomeAnimIn;
+        private System.Windows.Forms.Timer timer_welcomeAnimOut;
+        private float opacityLevel = 0f;
         private bool isStartStopToggled = false;
         private bool isLightsToggled = false;
         private bool isHazardsToggled = false;
         private bool isWindowsToggled = false;
-        private Panel slidePanel;
         private bool isDragging = false;
         private int dragStart;
         private int originalPanelTop;
@@ -28,11 +40,12 @@ namespace WinFormsCarStarter
         private int expandedTop;
 
 
-
         public MainForm()
         {
             InitializeComponent();
-
+            // MainForm closing handlers
+            Application.ApplicationExit += (s, e) => TruncateTables();
+            AppDomain.CurrentDomain.ProcessExit += (s, e) => TruncateTables();
 
             /******** Tabbed Interface Setup ********/
             // Tab setup using panels
@@ -113,13 +126,162 @@ namespace WinFormsCarStarter
             button_trips.ImageAlign = ContentAlignment.TopCenter;
             button_profile.ImageAlign = ContentAlignment.TopCenter;
 
+            // ******************** INITIAL STARTUP SCREEN ********************* //
+            // Database file
+            string dbPath = "carstarter.db";
+            string connectionString = $"Data Source={dbPath};";
+
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                connection.Open();
+
+                // Create the table if it doesn't exist
+                string tableCmd = @"
+                    CREATE TABLE IF NOT EXISTS Users (
+                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        FirstName TEXT NOT NULL,
+                        LastName TEXT NOT NULL,
+                        Email TEXT NOT NULL UNIQUE,
+                        Password TEXT NOT NULL,
+                        CarType TEXT
+                    );";
+
+                var createTable = new SqliteCommand(tableCmd, connection);
+                createTable.ExecuteNonQuery();
+            }
+
+            // Hide these panels until user logs in
+            panel1.Visible = false;
+            panel2.Visible = false;
+
+            // Startup Login Panel
+            panel_startUp = new Panel()
+            {
+                Dock = DockStyle.Fill,
+            };
+
+            this.Controls.Add(panel_startUp);
+            panel_startUp.BringToFront();
+
+            Label label_hello = new Label()
+            {
+                Location = new Point(35, 5),
+                Size = new Size(200, 80),
+                Text = "Hello Driver, let's create an account!",
+                TextAlign = ContentAlignment.MiddleCenter,
+                Font = new Font("Segoe UI", 14, FontStyle.Bold)
+            };
+            panel_startUp.Controls.Add(label_hello);
+
+            // Name
+            Label label_name = new Label()
+            {
+                Location = new Point(15, 100),
+                AutoSize = true,
+                Text = "Name: ",
+                Font = new Font("Segoe UI", 10, FontStyle.Regular)
+            };
+            panel_startUp.Controls.Add(label_name);
+
+            textBox_firstName = new TextBox()
+            {
+                Location = new Point(18, 120),
+                Size = new Size(110, 20),
+                PlaceholderText = "First"
+            };
+            panel_startUp.Controls.Add(textBox_firstName);
+
+            textBox_lastName = new TextBox()
+            {
+                Location = new Point(135, 120),
+                Size = new Size(110, 20),
+                PlaceholderText = "Last"
+            };
+            panel_startUp.Controls.Add(textBox_lastName);
+
+            // Email
+            Label label_email = new Label()
+            {
+                Location = new Point(15, 150),
+                AutoSize = true,
+                Text = "Email: ",
+                Font = new Font("Segoe UI", 10, FontStyle.Regular)
+            };
+            panel_startUp.Controls.Add(label_email);
+
+            textBox_email = new TextBox()
+            {
+                Location = new Point(18, 170),
+                Size = new Size(228, 20),
+                PlaceholderText = "yourname@example.com"
+            };
+            panel_startUp.Controls.Add(textBox_email);
+
+            // Password
+            Label label_password = new Label()
+            {
+                Location = new Point(15, 200),
+                AutoSize = true,
+                Text = "Password: ",
+                Font = new Font("Segoe UI", 10, FontStyle.Regular)
+            };
+            panel_startUp.Controls.Add(label_password);
+            Label label_passwordLength = new Label()
+            {
+                Location = new Point(15, 245),
+                AutoSize = true,
+                Text = "(Password must be atleast 6 characters) ",
+                Font = new Font("Segoe UI", 8, FontStyle.Regular),
+                ForeColor = Color.Gray,
+            };
+            panel_startUp.Controls.Add(label_passwordLength);
+
+            textBox_password = new TextBox()
+            {
+                Location = new Point(18, 220),
+                Size = new Size(228, 20),
+                UseSystemPasswordChar = true,
+            };
+            panel_startUp.Controls.Add(textBox_password);
+
+            // Car type
+            comboBox_vehicleType = new ComboBox()
+            {
+                Location = new Point(18, 265),
+                Size = new Size(150, 40),
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                DropDownStyle = ComboBoxStyle.DropDownList,
+            };
+
+            comboBox_vehicleType.Items.Add("Select Vehicle Type");
+            comboBox_vehicleType.Items.Add("Electric Vehicle");
+            comboBox_vehicleType.Items.Add("Hybrid Vehicle");
+            comboBox_vehicleType.Items.Add("Gas/Fuel Vehicle");
+
+            comboBox_vehicleType.SelectedIndex = 0;
+            panel_startUp.Controls.Add(comboBox_vehicleType);
+
+            // Create account
+            Button button_createAccount = new Button()
+            {
+                Location = new Point(33, 335),
+                Size = new Size(200, 50),
+                Text = "Create Account!",
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                BackColor = Color.MediumPurple,
+                FlatStyle = FlatStyle.Flat
+            };
+            button_createAccount.FlatAppearance.BorderSize = 2;
+            button_createAccount.FlatAppearance.BorderColor = Color.Black;
+            CornerRadius(button_createAccount, 10);
+            button_createAccount.Click += button_createAccount_Click;
+            panel_startUp.Controls.Add(button_createAccount);
+
             // Show home tab on startup
             ShowTab(panel_home);
             ActiveTab(button_home);
 
-            /******* Diagnostics ********
-            // Diagnostics at the top of the form to look like mobile device 
-            */
+            // ******* Diagnostics ******** //
             // Clock
             Label label_time = new Label()
             {
@@ -129,6 +291,8 @@ namespace WinFormsCarStarter
                 Padding = new Padding(0, 3, 0, 0)
             };
             panel_diagnostics.Controls.Add(label_time);
+
+
 
             // Timer to update the time every second
             System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
@@ -173,7 +337,7 @@ namespace WinFormsCarStarter
             pictureBox_temp = new PictureBox()
             {
                 Image = Image.FromFile("icons\\temperature.png"),
-                Size = new Size(40, 40),
+                Size = new Size(30, 30),
                 Location = new Point(30, 50),
                 SizeMode = PictureBoxSizeMode.StretchImage
             };
@@ -182,7 +346,7 @@ namespace WinFormsCarStarter
             // Progress bar for temperature (this will be temp of the vehicle engine ** how to show that it is engine temp??)
             progressBar_temp = new ColoredProgressBar()
             {
-                Location = new Point(8, 100),
+                Location = new Point(8, 90),
                 Size = new Size(75, 7),
                 BarColor = Color.Purple,
                 Minimum = 0,
@@ -195,7 +359,7 @@ namespace WinFormsCarStarter
             pictureBox_oil = new PictureBox()
             {
                 Image = Image.FromFile("icons\\oil.png"),
-                Size = new Size(50, 50),
+                Size = new Size(40, 40),
                 Location = new Point(110, 50),
                 SizeMode = PictureBoxSizeMode.StretchImage
             };
@@ -204,7 +368,7 @@ namespace WinFormsCarStarter
             // Progress bar for oil level
             progressBar_oil = new ColoredProgressBar()
             {
-                Location = new Point(97, 100),
+                Location = new Point(97, 90),
                 Size = new Size(75, 7),
                 BarColor = Color.Purple,
                 Minimum = 0,
@@ -217,7 +381,7 @@ namespace WinFormsCarStarter
             pictureBox_fuel = new PictureBox()
             {
                 Image = Image.FromFile("icons\\fuel.png"),
-                Size = new Size(35, 35),
+                Size = new Size(30, 30),
                 Location = new Point(205, 51),
                 SizeMode = PictureBoxSizeMode.StretchImage
             };
@@ -226,7 +390,7 @@ namespace WinFormsCarStarter
             // Progress bar for fuel level
             progressBar_fuel = new ColoredProgressBar()
             {
-                Location = new Point(185, 100),
+                Location = new Point(185, 90),
                 Size = new Size(75, 7),
                 BarColor = Color.Purple,
                 Minimum = 0,
@@ -262,7 +426,6 @@ namespace WinFormsCarStarter
             roundButton_lock.MouseEnter += RoundButton_lockUnlock_MouseEnter;
             roundButton_lock.MouseLeave += RoundButton_lockUnlock_MouseLeave;
             panel_home.Controls.Add(roundButton_lock);
-
 
             // Unlock Doors
             RoundButton roundButton_unlock = new RoundButton
@@ -317,7 +480,6 @@ namespace WinFormsCarStarter
             handleBar.MouseDown += SlidePanel_MouseDown;
             handleBar.MouseMove += SlidePanel_MouseMove;
             handleBar.MouseUp += SlidePanel_MouseUp;
-
 
             /********* Slide Panel Buttons **********/
             // Button for turning on and off vehicle headlights
@@ -453,7 +615,6 @@ namespace WinFormsCarStarter
             control.Region = new Region(path);
         }
 
-        /******************* TAB BUTTON METHODS ************************/
         // ActiveTab -- shows the user what tab they are currently on 
         private void ActiveTab(Button activeTab)
         {
@@ -488,7 +649,196 @@ namespace WinFormsCarStarter
                 button_profile.ImageIndex = 9;
         }
 
-        /************************ Bottom Tab Event Handlers ********************************/
+        private void WelcomeAnimation(string driver)
+        {
+            panel_startUp.Visible = false;
+
+            panel_welcome = new Panel()
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.MediumPurple,
+                Visible = true
+            };
+            this.Controls.Add(panel_welcome);
+            panel_welcome.BringToFront();
+
+            label_welcome = new Label()
+            {
+                Location = new Point(10, 15),
+                Size = new Size(200, 150),
+                Text = $"Welcome {driver}, to Piper Autostart!",
+                Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                TextAlign = ContentAlignment.MiddleCenter,
+            };
+            panel_welcome.Controls.Add(label_welcome);
+
+            timer_welcomeAnimIn = new System.Windows.Forms.Timer();
+            timer_welcomeAnimIn.Interval = 20;
+            timer_welcomeAnimIn.Tick += timer_welcomeAnim_Tick;
+            timer_welcomeAnimIn.Start();
+        }
+
+        private void timer_welcomeAnim_Tick(object sender, EventArgs e)
+        {
+            if (opacityLevel < 1f)
+            {
+                opacityLevel += 0.05f;
+                int alpha = (int)(opacityLevel * 255);
+                label_welcome.ForeColor = Color.FromArgb(alpha, 255, 255, 255);
+            }
+            else
+            {
+                timer_welcomeAnimIn.Stop();
+                timer_welcomeAnimIn.Dispose();
+
+                // Pause briefly before fade-out
+                System.Windows.Forms.Timer pauseTimer = new System.Windows.Forms.Timer();
+                pauseTimer.Interval = 1500; // 1.5 seconds pause
+                pauseTimer.Tick += (s, evt) =>
+                {
+                    pauseTimer.Stop();
+                    pauseTimer.Dispose();
+                    StartFadeOut(); // Start fading out
+                };
+                pauseTimer.Start();
+            }
+        }
+
+        private void StartFadeOut()
+        {
+            timer_welcomeAnimOut = new System.Windows.Forms.Timer();
+            timer_welcomeAnimOut.Interval = 30;
+            timer_welcomeAnimOut.Tick += Timer_FadeOut_Tick;
+            timer_welcomeAnimOut.Start();
+        }
+
+        private void Timer_FadeOut_Tick(object sender, EventArgs e)
+        {
+            if (opacityLevel > 0f)
+            {
+                opacityLevel -= 0.05f;
+                int alpha = (int)(opacityLevel * 255);
+                label_welcome.ForeColor = Color.FromArgb(alpha, 0, 0, 0);
+            }
+            else
+            {
+                timer_welcomeAnimOut.Stop();
+                timer_welcomeAnimOut.Dispose();
+
+                // Done fading — remove panel and show app
+                this.Controls.Remove(panel_welcome);
+                panel_welcome.Dispose();
+
+                ShowTab(panel_home);
+
+                panel1.Visible = true;
+                panel2.Visible = true;
+
+                ActiveTab(button_home);
+            }
+        }
+
+        private void InsertUser()
+        {
+            string dbPath = "carstarter.db";
+            string connectionString = $"Data Source={dbPath};";
+
+            string insertQuery = @"
+                INSERT INTO Users (FirstName, LastName, Email, Password, CarType)
+                VALUES (@FirstName, @LastName, @Email, @Password, @CarType);";
+
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                connection.Open();
+
+                using (var cmd = new SqliteCommand(insertQuery, connection))
+                {
+                    cmd.Parameters.AddWithValue("@FirstName", textBox_firstName.Text);
+                    cmd.Parameters.AddWithValue("@LastName", textBox_lastName.Text);
+                    cmd.Parameters.AddWithValue("@Email", textBox_email.Text);
+                    cmd.Parameters.AddWithValue("@Password", textBox_password.Text);
+                    cmd.Parameters.AddWithValue("@CarType", comboBox_vehicleType.SelectedItem.ToString());
+
+                    try
+                    {
+                        cmd.ExecuteNonQuery();
+                        WelcomeAnimation(textBox_firstName.Text);
+                    }
+                    catch (SqliteException ex)
+                    {
+                        MessageBox.Show("Error creating account: " + ex.Message, "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+        }
+
+        // delete tables on close
+        private void TruncateTables()
+        {
+            try
+            {
+                using (var connection = new SqliteConnection("Data Source=carstarter.db"))
+                {
+                    connection.Open();
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = @"
+                                              DELETE FROM Users;
+                                              ";
+                                              /* DELETE FROM Trips;
+                                              DELETE FROM Logs;
+                                              DELETE FROM sqlite_sequence;
+                                                "; */
+                        command.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        // ********************** START-UP PANEL EVENT HANDLERS *************************** //
+        private void button_createAccount_Click(object sender, EventArgs e)
+        {
+            // Check if any of the text boxes are empty
+            if (string.IsNullOrEmpty(textBox_firstName.Text) ||
+               (string.IsNullOrEmpty(textBox_lastName.Text) ||
+               (string.IsNullOrEmpty(textBox_email.Text) ||
+               (string.IsNullOrEmpty(textBox_password.Text)))))
+            {
+                ShowNotification("Please fill in all fields", "stop");
+                return;
+            }
+
+            // Check if user selected a car type
+            if (comboBox_vehicleType.SelectedIndex <= 0)
+            {
+                ShowNotification("Please select a vehicle type (via the drop down)", "stop");
+                return;
+            }
+
+            // Check if email textbox somewhat resembles an email format
+            if (!textBox_email.Text.Contains("@") || !textBox_email.Text.Contains("."))
+            {
+                ShowNotification("Please enter a valid email address.", "stop");
+                return;
+            }
+
+            // Check if password entered is atleast 6 characters
+            if (textBox_password.Text.Length < 6)
+            {
+                ShowNotification("Password must be at least 6 characters long.", "stop");
+                return;
+            }
+
+            InsertUser();
+
+        }
+
+
+        /************************ BOTTOM TAB EVENT HANDLERS ********************************/
         private void button_activity_Click(object sender, EventArgs e)
         {
             ShowTab(panel_activity);
@@ -788,7 +1138,5 @@ namespace WinFormsCarStarter
                 }
             }
         }
-
-
     }
 }

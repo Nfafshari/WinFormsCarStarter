@@ -22,8 +22,10 @@ namespace WinFormsCarStarter
         private TextBox textBox_lastName = new TextBox();
         private TextBox textBox_email = new TextBox();
         private TextBox textBox_password = new TextBox();
+        private TextBox textBox_vin = new TextBox();
         private ComboBox comboBox_vehicleType = new ComboBox();
         private Panel slidePanel;
+        private FlowLayoutPanel flowlayoutPanel_activities = new FlowLayoutPanel();
         private bool isStartStopToggled = false;
         private bool isLightsToggled = false;
         private bool isHazardsToggled = false;
@@ -33,6 +35,7 @@ namespace WinFormsCarStarter
         private int originalPanelTop;
         private int collapsedTop;
         private int expandedTop;
+        private int UserId;
 
 
         public MainForm()
@@ -130,25 +133,33 @@ namespace WinFormsCarStarter
             {
                 connection.Open();
 
+                var dropUsers = new SqliteCommand("DROP TABLE IF EXISTS Users;", connection);
+                dropUsers.ExecuteNonQuery();
+
                 string userTableCmd = @"
                     CREATE TABLE IF NOT EXISTS Users (
-                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        UserId INTEGER PRIMARY KEY AUTOINCREMENT,
                         FirstName TEXT NOT NULL,
                         LastName TEXT NOT NULL,
                         Email TEXT NOT NULL UNIQUE,
                         Password TEXT NOT NULL,
+                        Vin TEXT NOT NULL,
                         CarType TEXT
                     );";
 
                 var createUserTable = new SqliteCommand(userTableCmd, connection);
                 createUserTable.ExecuteNonQuery();
 
+                var dropTable = new SqliteCommand("DROP TABLE IF EXISTS ActivityLog;", connection);
+                dropTable.ExecuteNonQuery();
+
                 string activityTableCmd = @"
                     CREATE TABLE IF NOT EXISTS ActivityLog (
-                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        Date TEXT NOT NULL 
-                        Time TEXT NOT NULL,
-                        Activity TEXT NOT NULL,
+                        ActivityId INTEGER PRIMARY KEY AUTOINCREMENT,
+                        UserId INTEGER NOT NULL,
+                        LogDate TEXT NOT NULL, 
+                        LogTime TEXT NOT NULL,
+                        ActivityMessage TEXT NOT NULL,
                         IsStartEvent INTEGER NOT NULL
                     );";
 
@@ -233,6 +244,7 @@ namespace WinFormsCarStarter
                 Font = new Font("Segoe UI", 10, FontStyle.Regular)
             };
             panel_startUp.Controls.Add(label_password);
+
             Label label_passwordLength = new Label()
             {
                 Location = new Point(15, 245),
@@ -251,10 +263,28 @@ namespace WinFormsCarStarter
             };
             panel_startUp.Controls.Add(textBox_password);
 
+            // Vehicle Vin 
+            Label label_vin = new Label()
+            {
+                Location = new Point(15, 260),
+                AutoSize = true,
+                Text = "VIN: ",
+                Font = new Font("Segoe UI", 10, FontStyle.Regular)
+            };
+            panel_startUp.Controls.Add(label_vin);
+
+            textBox_vin = new TextBox()
+            {
+                Location = new Point(18, 280),
+                Size = new Size(228, 20),
+                PlaceholderText = "ex: 1HGBH41JXMN109186"
+            };
+            panel_startUp.Controls.Add(textBox_vin);
+
             // Car type
             comboBox_vehicleType = new ComboBox()
             {
-                Location = new Point(18, 265),
+                Location = new Point(18, 325),
                 Size = new Size(150, 40),
                 Font = new Font("Segoe UI", 10, FontStyle.Regular),
                 DropDownStyle = ComboBoxStyle.DropDownList,
@@ -271,7 +301,7 @@ namespace WinFormsCarStarter
             // Create account
             Button button_createAccount = new Button()
             {
-                Location = new Point(33, 335),
+                Location = new Point(33, 390),
                 Size = new Size(200, 50),
                 Text = "Create Account!",
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
@@ -601,6 +631,28 @@ namespace WinFormsCarStarter
             // ^^^ END of Home Tab section ^^^ //
 
             // *********************** Activity Tab *********************** //
+            Label label_activity = new Label()
+            {
+                Text = "Activities",
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                Location = new Point(102, 20),
+            };
+            panel_home.Controls.Add(label_activity);
+
+            // flow panel for list of activities
+            flowlayoutPanel_activities = new FlowLayoutPanel() 
+            {
+                Size = new Size(285, 450),
+                Location = new Point(Left, 100),
+                FlowDirection = FlowDirection.TopDown,
+                WrapContents = false,
+                AutoScroll = true,
+            };
+            panel_activity.Controls.Add(flowlayoutPanel_activities);
+
+            // Load the activities into the activity tab
+            LoadActivityLogs();
+
 
         }
 
@@ -691,12 +743,26 @@ namespace WinFormsCarStarter
         // InsertUser -- inserts user information into database
         private void InsertUser()
         {
+            // EXTRA local validation here too just in case (defensive coding)
+            if (string.IsNullOrEmpty(textBox_firstName.Text) ||
+                string.IsNullOrEmpty(textBox_lastName.Text) ||
+                string.IsNullOrEmpty(textBox_email.Text) ||
+                string.IsNullOrEmpty(textBox_password.Text) ||
+                string.IsNullOrEmpty(textBox_vin.Text) ||
+                comboBox_vehicleType.SelectedIndex == 0)
+            {
+                ShowNotification("Please fill in all fields correctly.", "stop");
+                return; // Don't insert anything
+            }
+
             string dbPath = "carstarter.db";
             string connectionString = $"Data Source={dbPath};";
 
             string insertQuery = @"
-                INSERT INTO Users (FirstName, LastName, Email, Password, CarType)
-                VALUES (@FirstName, @LastName, @Email, @Password, @CarType);";
+                    INSERT INTO Users (FirstName, LastName, Email, Password, Vin, CarType)
+                    VALUES (@FirstName, @LastName, @Email, @Password, @Vin, @CarType);
+
+                    SELECT last_insert_rowid();";
 
             using (var connection = new SqliteConnection(connectionString))
             {
@@ -708,27 +774,42 @@ namespace WinFormsCarStarter
                     cmd.Parameters.AddWithValue("@LastName", textBox_lastName.Text);
                     cmd.Parameters.AddWithValue("@Email", textBox_email.Text);
                     cmd.Parameters.AddWithValue("@Password", textBox_password.Text);
+                    cmd.Parameters.AddWithValue("@Vin", textBox_vin.Text);
                     cmd.Parameters.AddWithValue("@CarType", comboBox_vehicleType.SelectedItem.ToString());
 
                     try
                     {
-                        cmd.ExecuteNonQuery();
+                        var result = cmd.ExecuteScalar();
+                        if (result != null)
+                        {
+                            Session.CurrentUserID = Convert.ToInt32(result);
+                        }
+
                         ShowTab(panel_home);
-                        panel_startUp.Dispose();
+                        panel_startUp.Visible = false;
                         panel1.Visible = true;
                         panel2.Visible = true;
                         ActiveTab(button_home);
-                        ShowNotification($"Welcome, to Piper Autostart!", "");
+                        ShowNotification($"Welcome {textBox_firstName.Text}, to Piper Autostart!", "success");
+                        panel_startUp.Dispose();
                     }
                     catch (SqliteException ex)
                     {
-                        MessageBox.Show("Error creating account: " + ex.Message, "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        if (ex.Message.Contains("UNIQUE constraint failed"))
+                        {
+                            ShowNotification("An account with this email already exists!", "stop");
+                        }
+                        else
+                        {
+                            MessageBox.Show("Error creating account: " + ex.Message, "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
                     }
                 }
             }
         }
 
-        private void LogActivity(string message, bool isStartEvent) 
+        // LogActivity -- logs a performed activity to the database
+        private void LogActivity(string message, bool isStartEvent)
         {
             using (var connection = new SqliteConnection("Data Source=carstarter.db"))
             {
@@ -736,18 +817,83 @@ namespace WinFormsCarStarter
 
                 var command = connection.CreateCommand();
                 command.CommandText = @"
-                    INSERT INTO ActivityLog (Date, Time, Activity, IsStartEvent)
-                    VALUES ($Date, $Time, $Activity, $IsStartEvent)";
+                        INSERT INTO ActivityLog (UserId, LogDate, LogTime, ActivityMessage, IsStartEvent)
+                        VALUES ($UserId, $LogDate, $LogTime, $ActivityMessage, $IsStartEvent)";
 
-                command.Parameters.AddWithValue("$Date", DateTime.Now.ToString("MMM-dd-yyyy"));
-                command.Parameters.AddWithValue("$Time", DateTime.Now.ToString("hh:mm:ss"));
-                command.Parameters.AddWithValue("$Activity", message);
+                command.Parameters.AddWithValue("$UserId", Session.CurrentUserID);
+                command.Parameters.AddWithValue("$LogDate", DateTime.Now.ToString("MMM-dd-yyyy"));
+                command.Parameters.AddWithValue("$LogTime", DateTime.Now.ToString("hh:mm:ss tt"));
+                command.Parameters.AddWithValue("$ActivityMessage", message);
                 command.Parameters.AddWithValue("$IsStartEvent", isStartEvent ? 1 : 0);
 
-
                 command.ExecuteNonQuery();
+
+                DisplayActivity($"{DateTime.Now:MMM-dd-yyyy hh:mm:ss tt} - {message}", isStartEvent);
             }
         }
+
+        // DisplayActivity -- displays the activities in the activity tab
+        private void DisplayActivity(string message, bool isStartEvent)
+        {
+            Panel panel_activity = new Panel
+            {
+                Width = flowlayoutPanel_activities.Width - 25,
+                Height = 50,
+                Margin = new Padding(10),
+                BackColor = isStartEvent ? Color.MediumPurple : Color.IndianRed,
+                BorderStyle = BorderStyle.FixedSingle,
+            };
+            
+            
+
+            Label label = new Label
+            {
+                Text = $"{DateTime.Now:hh:mm:ss tt} - {message}",
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                ForeColor = Color.White,
+                Padding = new Padding(10, 15, 10, 10)
+            };
+
+            panel_activity.Controls.Add(label);
+            flowlayoutPanel_activities.Controls.Add(panel_activity);
+            flowlayoutPanel_activities.Controls.SetChildIndex(panel_activity, 0); // Move to top
+        }
+
+        // LoadActivityLog -- loads each activity from database and uses displayActivity to display them to the activity tab
+        private void LoadActivityLogs()
+        {
+            using (var connection = new SqliteConnection("Data Source=carstarter.db"))
+            {
+                connection.Open();
+
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                    SELECT LogDate, LogTime, ActivityMessage, IsStartEvent
+                    FROM ActivityLog
+                    WHERE UserId = $UserId
+                    ORDER BY ActivityId DESC
+                    LIMIT 50";
+
+                command.Parameters.AddWithValue("$UserId", Session.CurrentUserID); 
+
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        string date = reader.GetString(0);
+                        string time = reader.GetString(1);
+                        string message = reader.GetString(2);
+                        bool isStartEvent = reader.GetInt32(3) == 1;
+
+                        DisplayActivity($"{date} {time} - {message}", isStartEvent);
+                    }
+                }
+            }
+        }
+
+
 
         // TruncateTables -- deletes table information on close
         private void TruncateTables()
@@ -761,9 +907,9 @@ namespace WinFormsCarStarter
                     {
                         command.CommandText = @"
                                               DELETE FROM Users;
+                                              DELETE FROM ActivityLog;
                                               ";
-                                              /* DELETE FROM Trips;
-                                              DELETE FROM Logs;
+                                              /*DELETE FROM Logs;
                                               DELETE FROM sqlite_sequence;
                                                 "; */
                         command.ExecuteNonQuery();
@@ -776,6 +922,8 @@ namespace WinFormsCarStarter
             }
         }
 
+        
+
         // ********************** START-UP PANEL EVENT HANDLERS *************************** //
         private void button_createAccount_Click(object sender, EventArgs e)
         {
@@ -783,7 +931,8 @@ namespace WinFormsCarStarter
             if (string.IsNullOrEmpty(textBox_firstName.Text) ||
                (string.IsNullOrEmpty(textBox_lastName.Text) ||
                (string.IsNullOrEmpty(textBox_email.Text) ||
-               (string.IsNullOrEmpty(textBox_password.Text)))))
+               (string.IsNullOrEmpty(textBox_password.Text) ||
+               (string.IsNullOrEmpty(textBox_vin.Text))))))
             {
                 ShowNotification("Please fill in all fields", "stop");
                 return;
@@ -810,10 +959,17 @@ namespace WinFormsCarStarter
                 return;
             }
 
+            if (textBox_vin.Text.Length < 17)
+            {
+                ShowNotification("VIN must be exactly 17 characters long.", "stop");
+                return;
+            }
+
             InsertUser();
 
         }
 
+        // ^^^^^^ END ^^^^^^ //
 
         /************************ BOTTOM TAB EVENT HANDLERS ********************************/
         private void button_activity_Click(object sender, EventArgs e)

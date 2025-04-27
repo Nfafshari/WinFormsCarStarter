@@ -24,6 +24,7 @@ namespace WinFormsCarStarter
         private TextBox textBox_password = new TextBox();
         private TextBox textBox_vin = new TextBox();
         private ComboBox comboBox_vehicleType = new ComboBox();
+        private ComboBox comboBox_activityDate = new ComboBox();
         private Panel slidePanel;
         private FlowLayoutPanel flowlayoutPanel_activities = new FlowLayoutPanel();
         private bool isStartStopToggled = false;
@@ -635,9 +636,34 @@ namespace WinFormsCarStarter
             {
                 Text = "Activities",
                 Font = new Font("Segoe UI", 14, FontStyle.Bold),
-                Location = new Point(102, 20),
+                Location = new Point(95, 30),
             };
-            panel_home.Controls.Add(label_activity);
+            panel_activity.Controls.Add(label_activity);
+
+            Label label_timePeriod = new Label()
+            {
+                Text = "Time Period:",
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                Location = new Point(10, 50),
+            };
+            panel_activity.Controls.Add(label_timePeriod);
+
+            comboBox_activityDate = new ComboBox()
+            {
+                Location = new Point(10, 73),
+                Size = new Size(150, 30),
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                DropDownStyle = ComboBoxStyle.DropDownList,
+            };
+
+            comboBox_activityDate.Items.Add("Today");
+            comboBox_activityDate.Items.Add("Previous Month");
+            comboBox_activityDate.Items.Add("Year to Date");
+            comboBox_activityDate.Items.Add("All");
+
+            comboBox_activityDate.SelectedIndex = 0;
+            comboBox_activityDate.SelectedIndexChanged += ComboBox_activityDate_SelectedIndexChanged;
+            panel_activity.Controls.Add(comboBox_activityDate);
 
             // flow panel for list of activities
             flowlayoutPanel_activities = new FlowLayoutPanel() 
@@ -828,22 +854,20 @@ namespace WinFormsCarStarter
 
                 command.ExecuteNonQuery();
 
-                DisplayActivity($"{DateTime.Now:MMM-dd-yyyy hh:mm:ss tt} - {message}", isStartEvent);
+                DisplayActivity($"{DateTime.Now:MMM-dd-yyyy} - {message}", isStartEvent);
             }
         }
 
         // DisplayActivity -- displays the activities in the activity tab
         private void DisplayActivity(string message, bool isStartEvent)
         {
-            Panel panel_activity = new Panel
+            Panel panel = new Panel
             {
-                Width = flowlayoutPanel_activities.Width - 25,
-                Height = 50,
-                Margin = new Padding(10),
+                Size = new Size(246, 50),
+                Margin = new Padding(7),
                 BackColor = isStartEvent ? Color.MediumPurple : Color.IndianRed,
                 BorderStyle = BorderStyle.FixedSingle,
             };
-            
             
 
             Label label = new Label
@@ -851,14 +875,15 @@ namespace WinFormsCarStarter
                 Text = $"{DateTime.Now:hh:mm:ss tt} - {message}",
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleLeft,
-                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                Font = new Font("Segoe UI", 7, FontStyle.Regular),
                 ForeColor = Color.White,
-                Padding = new Padding(10, 15, 10, 10)
+                Padding = new Padding(8, 12, 10, 8)
             };
 
-            panel_activity.Controls.Add(label);
-            flowlayoutPanel_activities.Controls.Add(panel_activity);
-            flowlayoutPanel_activities.Controls.SetChildIndex(panel_activity, 0); // Move to top
+            panel.Controls.Add(label);
+            CornerRadius(panel, 10);
+            flowlayoutPanel_activities.Controls.Add(panel);
+            flowlayoutPanel_activities.Controls.SetChildIndex(panel, 0); 
         }
 
         // LoadActivityLog -- loads each activity from database and uses displayActivity to display them to the activity tab
@@ -869,14 +894,36 @@ namespace WinFormsCarStarter
                 connection.Open();
 
                 var command = connection.CreateCommand();
-                command.CommandText = @"
+
+                string filter = comboBox_activityDate.SelectedItem.ToString();
+                string query = @"
                     SELECT LogDate, LogTime, ActivityMessage, IsStartEvent
                     FROM ActivityLog
-                    WHERE UserId = $UserId
-                    ORDER BY ActivityId DESC
-                    LIMIT 50";
+                    WHERE UserId = $UserId ";
 
-                command.Parameters.AddWithValue("$UserId", Session.CurrentUserID); 
+                // Apply date filter
+                if (filter == "Today")
+                {
+                    string today = DateTime.Now.ToString("MMM-dd-yyyy");
+                    query += "AND LogDate = $FilterDate ";
+                    command.Parameters.AddWithValue("$FilterDate", today);
+                }
+                else if (filter == "This Month")
+                {
+                    string monthPrefix = DateTime.Now.ToString("MMM-");
+                    query += "AND LogDate LIKE $FilterMonth || '%' ";
+                    command.Parameters.AddWithValue("$FilterMonth", monthPrefix + "%");
+                }
+                else if (filter == "This Year")
+                {
+                    string year = DateTime.Now.Year.ToString();
+                    query += "AND LogDate LIKE '%' || $FilterYear ";
+                    command.Parameters.AddWithValue("$FilterYear", year);
+                }
+
+                query += "ORDER BY LogDate DESC, LogTime DESC LIMIT 50;";
+                command.CommandText = query;
+                command.Parameters.AddWithValue("$UserId", Session.CurrentUserID);
 
                 using (var reader = command.ExecuteReader())
                 {
@@ -959,7 +1006,7 @@ namespace WinFormsCarStarter
                 return;
             }
 
-            if (textBox_vin.Text.Length < 17)
+            if (textBox_vin.Text.Length < 17 || textBox_vin.Text.Length > 17)
             {
                 ShowNotification("VIN must be exactly 17 characters long.", "stop");
                 return;
@@ -1162,6 +1209,16 @@ namespace WinFormsCarStarter
             LogActivity("Vehicle Trunk Opened", true);
         }
 
+        // ^^^^^^^^^ END ^^^^^^^^^^^ //
+
+        // ************* ACTIVITY PAGE HNADLERS *************** //
+        private void ComboBox_activityDate_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            LoadActivityLogs();
+        }
+
+        // ^^^^^^^^^^ END ^^^^^^^^^^^ //
+        
         /************************** ROUND BUTTON CLASS *********************************/
         // Class for making normal buttons into round buttons for home tab
         public class RoundButton : Button

@@ -158,8 +158,7 @@ namespace WinFormsCarStarter
                     CREATE TABLE IF NOT EXISTS ActivityLog (
                         ActivityId INTEGER PRIMARY KEY AUTOINCREMENT,
                         UserId INTEGER NOT NULL,
-                        LogDate TEXT NOT NULL, 
-                        LogTime TEXT NOT NULL,
+                        LogDate DATETIME NOT NULL, 
                         ActivityMessage TEXT NOT NULL,
                         IsStartEvent INTEGER NOT NULL
                     );";
@@ -809,6 +808,7 @@ namespace WinFormsCarStarter
                         if (result != null)
                         {
                             Session.CurrentUserID = Convert.ToInt32(result);
+                            InsertFakeActivities();
                         }
 
                         ShowTab(panel_home);
@@ -843,18 +843,17 @@ namespace WinFormsCarStarter
 
                 var command = connection.CreateCommand();
                 command.CommandText = @"
-                        INSERT INTO ActivityLog (UserId, LogDate, LogTime, ActivityMessage, IsStartEvent)
-                        VALUES ($UserId, $LogDate, $LogTime, $ActivityMessage, $IsStartEvent)";
+                    INSERT INTO ActivityLog (UserId, LogDate, ActivityMessage, IsStartEvent)
+                    VALUES ($UserId, $LogDate, $ActivityMessage, $IsStartEvent)";
 
                 command.Parameters.AddWithValue("$UserId", Session.CurrentUserID);
-                command.Parameters.AddWithValue("$LogDate", DateTime.Now.ToString("MMM-dd-yyyy"));
-                command.Parameters.AddWithValue("$LogTime", DateTime.Now.ToString("hh:mm:ss tt"));
-                command.Parameters.AddWithValue("$ActivityMessage", message);
+                command.Parameters.AddWithValue("$LogDate", DateTime.Now);
+                command.Parameters.AddWithValue("$ActivityMessage", message); 
                 command.Parameters.AddWithValue("$IsStartEvent", isStartEvent ? 1 : 0);
 
                 command.ExecuteNonQuery();
 
-                DisplayActivity($"{DateTime.Now:MMM-dd-yyyy} - {message}", isStartEvent);
+                DisplayActivity($"{DateTime.Now:MMM-dd-yyyy hh:mm:ss tt} - {message}", isStartEvent);
             }
         }
 
@@ -872,7 +871,7 @@ namespace WinFormsCarStarter
 
             Label label = new Label
             {
-                Text = $"{DateTime.Now:hh:mm:ss tt} - {message}",
+                Text = message,
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleLeft,
                 Font = new Font("Segoe UI", 7, FontStyle.Regular),
@@ -884,6 +883,8 @@ namespace WinFormsCarStarter
             CornerRadius(panel, 10);
             flowlayoutPanel_activities.Controls.Add(panel);
             flowlayoutPanel_activities.Controls.SetChildIndex(panel, 0); 
+
+
         }
 
         // LoadActivityLog -- loads each activity from database and uses displayActivity to display them to the activity tab
@@ -897,31 +898,34 @@ namespace WinFormsCarStarter
 
                 string filter = comboBox_activityDate.SelectedItem.ToString();
                 string query = @"
-                    SELECT LogDate, LogTime, ActivityMessage, IsStartEvent
+                    SELECT LogDate, ActivityMessage, IsStartEvent
                     FROM ActivityLog
                     WHERE UserId = $UserId ";
 
                 // Apply date filter
                 if (filter == "Today")
                 {
-                    string today = DateTime.Now.ToString("MMM-dd-yyyy");
-                    query += "AND LogDate = $FilterDate ";
-                    command.Parameters.AddWithValue("$FilterDate", today);
+                    query += "AND date(LogDate) = date('now') ";
                 }
-                else if (filter == "This Month")
+                else if (filter == "Previous Month")
                 {
-                    string monthPrefix = DateTime.Now.ToString("MMM-");
-                    query += "AND LogDate LIKE $FilterMonth || '%' ";
-                    command.Parameters.AddWithValue("$FilterMonth", monthPrefix + "%");
+                    DateTime now = DateTime.Now;
+                    DateTime firstDayLastMonth = new DateTime(now.Year, now.Month, 1).AddMonths(-1);
+                    DateTime lastDayLastMonth = new DateTime(now.Year, now.Month, 1).AddDays(-1);
+
+                    string firstDay = firstDayLastMonth.ToString("yyyy-MM-dd");
+                    string lastDay = lastDayLastMonth.ToString("yyyy-MM-dd");
+
+                    query += "AND date(LogDate) BETWEEN date($FirstDay) AND date($LastDay) ";
+                    command.Parameters.AddWithValue("$FirstDay", firstDay);
+                    command.Parameters.AddWithValue("$LastDay", lastDay);
                 }
                 else if (filter == "This Year")
                 {
-                    string year = DateTime.Now.Year.ToString();
-                    query += "AND LogDate LIKE '%' || $FilterYear ";
-                    command.Parameters.AddWithValue("$FilterYear", year);
+                    query += "AND strftime('%Y', LogDate) = strftime('%Y', 'now') ORDER BY LogDate DESC ";
                 }
 
-                query += "ORDER BY LogDate DESC, LogTime DESC LIMIT 50;";
+                query += "ORDER BY LogDate DESC;";
                 command.CommandText = query;
                 command.Parameters.AddWithValue("$UserId", Session.CurrentUserID);
 
@@ -929,12 +933,14 @@ namespace WinFormsCarStarter
                 {
                     while (reader.Read())
                     {
-                        string date = reader.GetString(0);
-                        string time = reader.GetString(1);
-                        string message = reader.GetString(2);
-                        bool isStartEvent = reader.GetInt32(3) == 1;
+                        string logDateTime = reader.GetString(0); // "2025-04-27 15:39:00"
+                        string message = reader.GetString(1);     // "Vehicle Started"
+                        bool isStartEvent = reader.GetInt32(2) == 1;
 
-                        DisplayActivity($"{date} {time} - {message}", isStartEvent);
+                        DateTime parsedDate = DateTime.Parse(logDateTime);
+
+                        // Correctly combine on display:
+                        DisplayActivity($"{parsedDate:MMM-dd-yyyy hh:mm:ss tt} - {message}", isStartEvent);
                     }
                 }
             }
@@ -969,7 +975,42 @@ namespace WinFormsCarStarter
             }
         }
 
-        
+        private void InsertFakeActivities()
+        {
+            using (var connection = new SqliteConnection("Data Source=carstarter.db"))
+            {
+                connection.Open();
+
+                var command = connection.CreateCommand();
+                DateTime now = DateTime.Now;
+                DateTime firstDayLastMonth = new DateTime(now.Year, now.Month, 1).AddMonths(-1);
+
+                command.CommandText = @"
+                    INSERT INTO ActivityLog (UserId, LogDate, ActivityMessage, IsStartEvent) VALUES
+                    ($UserId1, $LogDate1, $Message1, $IsStartEvent1),
+                    ($UserId2, $LogDate2, $Message2, $IsStartEvent2),
+                    ($UserId3, $LogDate3, $Message3, $IsStartEvent3);";
+
+                command.Parameters.AddWithValue("$UserId1", Session.CurrentUserID);
+                command.Parameters.AddWithValue("$LogDate1", firstDayLastMonth.AddDays(5));
+                command.Parameters.AddWithValue("$Message1", "Vehicle Started (Test)");
+                command.Parameters.AddWithValue("$IsStartEvent1", 1);
+
+                command.Parameters.AddWithValue("$UserId2", Session.CurrentUserID);
+                command.Parameters.AddWithValue("$LogDate2", firstDayLastMonth.AddDays(10));
+                command.Parameters.AddWithValue("$Message2", "Horn Activated (Test)");
+                command.Parameters.AddWithValue("$IsStartEvent2", 1);
+
+                command.Parameters.AddWithValue("$UserId3", Session.CurrentUserID);
+                command.Parameters.AddWithValue("$LogDate3", firstDayLastMonth.AddDays(15));
+                command.Parameters.AddWithValue("$Message3", "Lights Toggled (Test)");
+                command.Parameters.AddWithValue("$IsStartEvent3", 0);
+
+                command.ExecuteNonQuery();
+            }
+        }
+
+
 
         // ********************** START-UP PANEL EVENT HANDLERS *************************** //
         private void button_createAccount_Click(object sender, EventArgs e)
@@ -1214,6 +1255,7 @@ namespace WinFormsCarStarter
         // ************* ACTIVITY PAGE HNADLERS *************** //
         private void ComboBox_activityDate_SelectedIndexChanged(object sender, EventArgs e)
         {
+            flowlayoutPanel_activities.Controls.Clear();
             LoadActivityLogs();
         }
 

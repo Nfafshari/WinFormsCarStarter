@@ -22,8 +22,11 @@ namespace WinFormsCarStarter
         private TextBox textBox_lastName = new TextBox();
         private TextBox textBox_email = new TextBox();
         private TextBox textBox_password = new TextBox();
+        private TextBox textBox_vin = new TextBox();
         private ComboBox comboBox_vehicleType = new ComboBox();
+        private ComboBox comboBox_activityDate = new ComboBox();
         private Panel slidePanel;
+        private FlowLayoutPanel flowlayoutPanel_activities = new FlowLayoutPanel();
         private bool isStartStopToggled = false;
         private bool isLightsToggled = false;
         private bool isHazardsToggled = false;
@@ -33,6 +36,7 @@ namespace WinFormsCarStarter
         private int originalPanelTop;
         private int collapsedTop;
         private int expandedTop;
+        private int UserId;
 
 
         public MainForm()
@@ -121,7 +125,7 @@ namespace WinFormsCarStarter
             button_trips.ImageAlign = ContentAlignment.TopCenter;
             button_profile.ImageAlign = ContentAlignment.TopCenter;
 
-            // ******************** INITIAL STARTUP SCREEN ********************* //
+            // ******************** DATABASE SETUP ******************** //  
             // Database file
             string dbPath = "carstarter.db";
             string connectionString = $"Data Source={dbPath};";
@@ -130,21 +134,40 @@ namespace WinFormsCarStarter
             {
                 connection.Open();
 
-                // Create the table if it doesn't exist
-                string tableCmd = @"
+                var dropUsers = new SqliteCommand("DROP TABLE IF EXISTS Users;", connection);
+                dropUsers.ExecuteNonQuery();
+
+                string userTableCmd = @"
                     CREATE TABLE IF NOT EXISTS Users (
-                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        UserId INTEGER PRIMARY KEY AUTOINCREMENT,
                         FirstName TEXT NOT NULL,
                         LastName TEXT NOT NULL,
                         Email TEXT NOT NULL UNIQUE,
                         Password TEXT NOT NULL,
+                        Vin TEXT NOT NULL,
                         CarType TEXT
                     );";
 
-                var createTable = new SqliteCommand(tableCmd, connection);
-                createTable.ExecuteNonQuery();
+                var createUserTable = new SqliteCommand(userTableCmd, connection);
+                createUserTable.ExecuteNonQuery();
+
+                var dropTable = new SqliteCommand("DROP TABLE IF EXISTS ActivityLog;", connection);
+                dropTable.ExecuteNonQuery();
+
+                string activityTableCmd = @"
+                    CREATE TABLE IF NOT EXISTS ActivityLog (
+                        ActivityId INTEGER PRIMARY KEY AUTOINCREMENT,
+                        UserId INTEGER NOT NULL,
+                        LogDate DATETIME NOT NULL, 
+                        ActivityMessage TEXT NOT NULL,
+                        IsStartEvent INTEGER NOT NULL
+                    );";
+
+                var createActivityLog = new SqliteCommand(activityTableCmd, connection);
+                createActivityLog.ExecuteNonQuery();
             }
 
+            // ******************** INITIAL STARTUP SCREEN ********************* //
             // Hide these panels until user logs in
             panel1.Visible = false;
             panel2.Visible = false;
@@ -221,6 +244,7 @@ namespace WinFormsCarStarter
                 Font = new Font("Segoe UI", 10, FontStyle.Regular)
             };
             panel_startUp.Controls.Add(label_password);
+
             Label label_passwordLength = new Label()
             {
                 Location = new Point(15, 245),
@@ -239,10 +263,28 @@ namespace WinFormsCarStarter
             };
             panel_startUp.Controls.Add(textBox_password);
 
+            // Vehicle Vin 
+            Label label_vin = new Label()
+            {
+                Location = new Point(15, 260),
+                AutoSize = true,
+                Text = "VIN: ",
+                Font = new Font("Segoe UI", 10, FontStyle.Regular)
+            };
+            panel_startUp.Controls.Add(label_vin);
+
+            textBox_vin = new TextBox()
+            {
+                Location = new Point(18, 280),
+                Size = new Size(228, 20),
+                PlaceholderText = "ex: 1HGBH41JXMN109186"
+            };
+            panel_startUp.Controls.Add(textBox_vin);
+
             // Car type
             comboBox_vehicleType = new ComboBox()
             {
-                Location = new Point(18, 265),
+                Location = new Point(18, 325),
                 Size = new Size(150, 40),
                 Font = new Font("Segoe UI", 10, FontStyle.Regular),
                 DropDownStyle = ComboBoxStyle.DropDownList,
@@ -259,7 +301,7 @@ namespace WinFormsCarStarter
             // Create account
             Button button_createAccount = new Button()
             {
-                Location = new Point(33, 335),
+                Location = new Point(33, 390),
                 Size = new Size(200, 50),
                 Text = "Create Account!",
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
@@ -587,6 +629,56 @@ namespace WinFormsCarStarter
             slidePanel.Controls.Add(button_trunk);
 
             // ^^^ END of Home Tab section ^^^ //
+
+            // *********************** Activity Tab *********************** //
+            Label label_activity = new Label()
+            {
+                Text = "Activities",
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                Location = new Point(95, 30),
+            };
+            panel_activity.Controls.Add(label_activity);
+
+            Label label_timePeriod = new Label()
+            {
+                Text = "Time Period:",
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                Location = new Point(10, 50),
+            };
+            panel_activity.Controls.Add(label_timePeriod);
+
+            comboBox_activityDate = new ComboBox()
+            {
+                Location = new Point(10, 73),
+                Size = new Size(150, 30),
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                DropDownStyle = ComboBoxStyle.DropDownList,
+            };
+
+            comboBox_activityDate.Items.Add("Today");
+            comboBox_activityDate.Items.Add("Previous Month");
+            comboBox_activityDate.Items.Add("Year to Date");
+            comboBox_activityDate.Items.Add("All");
+
+            comboBox_activityDate.SelectedIndex = 0;
+            comboBox_activityDate.SelectedIndexChanged += ComboBox_activityDate_SelectedIndexChanged;
+            panel_activity.Controls.Add(comboBox_activityDate);
+
+            // flow panel for list of activities
+            flowlayoutPanel_activities = new FlowLayoutPanel() 
+            {
+                Size = new Size(285, 450),
+                Location = new Point(Left, 100),
+                FlowDirection = FlowDirection.TopDown,
+                WrapContents = false,
+                AutoScroll = true,
+            };
+            panel_activity.Controls.Add(flowlayoutPanel_activities);
+
+            // Load the activities into the activity tab
+            LoadActivityLogs();
+
+
         }
 
         /************** GLOBAL METHODS *************/
@@ -673,15 +765,29 @@ namespace WinFormsCarStarter
                 button_profile.ImageIndex = 9;
         }
 
-
+        // InsertUser -- inserts user information into database
         private void InsertUser()
         {
+            // EXTRA local validation here too just in case (defensive coding)
+            if (string.IsNullOrEmpty(textBox_firstName.Text) ||
+                string.IsNullOrEmpty(textBox_lastName.Text) ||
+                string.IsNullOrEmpty(textBox_email.Text) ||
+                string.IsNullOrEmpty(textBox_password.Text) ||
+                string.IsNullOrEmpty(textBox_vin.Text) ||
+                comboBox_vehicleType.SelectedIndex == 0)
+            {
+                ShowNotification("Please fill in all fields correctly.", "stop");
+                return; // Don't insert anything
+            }
+
             string dbPath = "carstarter.db";
             string connectionString = $"Data Source={dbPath};";
 
             string insertQuery = @"
-                INSERT INTO Users (FirstName, LastName, Email, Password, CarType)
-                VALUES (@FirstName, @LastName, @Email, @Password, @CarType);";
+                    INSERT INTO Users (FirstName, LastName, Email, Password, Vin, CarType)
+                    VALUES (@FirstName, @LastName, @Email, @Password, @Vin, @CarType);
+
+                    SELECT last_insert_rowid();";
 
             using (var connection = new SqliteConnection(connectionString))
             {
@@ -693,27 +799,156 @@ namespace WinFormsCarStarter
                     cmd.Parameters.AddWithValue("@LastName", textBox_lastName.Text);
                     cmd.Parameters.AddWithValue("@Email", textBox_email.Text);
                     cmd.Parameters.AddWithValue("@Password", textBox_password.Text);
+                    cmd.Parameters.AddWithValue("@Vin", textBox_vin.Text);
                     cmd.Parameters.AddWithValue("@CarType", comboBox_vehicleType.SelectedItem.ToString());
 
                     try
                     {
-                        cmd.ExecuteNonQuery();
+                        var result = cmd.ExecuteScalar();
+                        if (result != null)
+                        {
+                            Session.CurrentUserID = Convert.ToInt32(result);
+                            InsertFakeActivities();
+                        }
+
                         ShowTab(panel_home);
-                        panel_startUp.Dispose();
+                        panel_startUp.Visible = false;
                         panel1.Visible = true;
                         panel2.Visible = true;
                         ActiveTab(button_home);
-                        ShowNotification($"Welcome {textBox_firstName.Text}, to Piper Autostart!", "");
+                        ShowNotification($"Welcome {textBox_firstName.Text}, to Piper Autostart!", "success");
+                        panel_startUp.Dispose();
                     }
                     catch (SqliteException ex)
                     {
-                        MessageBox.Show("Error creating account: " + ex.Message, "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        if (ex.Message.Contains("UNIQUE constraint failed"))
+                        {
+                            ShowNotification("An account with this email already exists!", "stop");
+                        }
+                        else
+                        {
+                            MessageBox.Show("Error creating account: " + ex.Message, "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
                     }
                 }
             }
         }
 
-        // delete tables on close
+        // LogActivity -- logs a performed activity to the database
+        private void LogActivity(string message, bool isStartEvent)
+        {
+            using (var connection = new SqliteConnection("Data Source=carstarter.db"))
+            {
+                connection.Open();
+
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                    INSERT INTO ActivityLog (UserId, LogDate, ActivityMessage, IsStartEvent)
+                    VALUES ($UserId, $LogDate, $ActivityMessage, $IsStartEvent)";
+
+                command.Parameters.AddWithValue("$UserId", Session.CurrentUserID);
+                command.Parameters.AddWithValue("$LogDate", DateTime.Now);
+                command.Parameters.AddWithValue("$ActivityMessage", message); 
+                command.Parameters.AddWithValue("$IsStartEvent", isStartEvent ? 1 : 0);
+
+                command.ExecuteNonQuery();
+
+                DisplayActivity($"{DateTime.Now:MMM-dd-yyyy hh:mm:ss tt} - {message}", isStartEvent);
+            }
+        }
+
+        // DisplayActivity -- displays the activities in the activity tab
+        private void DisplayActivity(string message, bool isStartEvent)
+        {
+            Panel panel = new Panel
+            {
+                Size = new Size(246, 50),
+                Margin = new Padding(7),
+                BackColor = isStartEvent ? Color.MediumPurple : Color.IndianRed,
+                BorderStyle = BorderStyle.FixedSingle,
+            };
+            
+
+            Label label = new Label
+            {
+                Text = message,
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Font = new Font("Segoe UI", 7, FontStyle.Regular),
+                ForeColor = Color.White,
+                Padding = new Padding(8, 12, 10, 8)
+            };
+
+            panel.Controls.Add(label);
+            CornerRadius(panel, 10);
+            flowlayoutPanel_activities.Controls.Add(panel);
+            flowlayoutPanel_activities.Controls.SetChildIndex(panel, 0); 
+
+
+        }
+
+        // LoadActivityLog -- loads each activity from database and uses displayActivity to display them to the activity tab
+        private void LoadActivityLogs()
+        {
+            using (var connection = new SqliteConnection("Data Source=carstarter.db"))
+            {
+                connection.Open();
+
+                var command = connection.CreateCommand();
+
+                string filter = comboBox_activityDate.SelectedItem.ToString();
+                string query = @"
+                    SELECT LogDate, ActivityMessage, IsStartEvent
+                    FROM ActivityLog
+                    WHERE UserId = $UserId ";
+
+                // Apply date filter
+                if (filter == "Today")
+                {
+                    query += "AND date(LogDate) = date('now') ";
+                }
+                else if (filter == "Previous Month")
+                {
+                    DateTime now = DateTime.Now;
+                    DateTime firstDayLastMonth = new DateTime(now.Year, now.Month, 1).AddMonths(-1);
+                    DateTime lastDayLastMonth = new DateTime(now.Year, now.Month, 1).AddDays(-1);
+
+                    string firstDay = firstDayLastMonth.ToString("yyyy-MM-dd");
+                    string lastDay = lastDayLastMonth.ToString("yyyy-MM-dd");
+
+                    query += "AND date(LogDate) BETWEEN date($FirstDay) AND date($LastDay) ";
+                    command.Parameters.AddWithValue("$FirstDay", firstDay);
+                    command.Parameters.AddWithValue("$LastDay", lastDay);
+                }
+                else if (filter == "This Year")
+                {
+                    query += "AND strftime('%Y', LogDate) = strftime('%Y', 'now') ORDER BY LogDate DESC ";
+                }
+
+                query += "ORDER BY LogDate DESC;";
+                command.CommandText = query;
+                command.Parameters.AddWithValue("$UserId", Session.CurrentUserID);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        string logDateTime = reader.GetString(0); // "2025-04-27 15:39:00"
+                        string message = reader.GetString(1);     // "Vehicle Started"
+                        bool isStartEvent = reader.GetInt32(2) == 1;
+
+                        DateTime parsedDate = DateTime.Parse(logDateTime);
+
+                        // Correctly combine on display:
+                        DisplayActivity($"{parsedDate:MMM-dd-yyyy hh:mm:ss tt} - {message}", isStartEvent);
+                    }
+                }
+            }
+        }
+
+
+
+        // TruncateTables -- deletes table information on close
         private void TruncateTables()
         {
             try
@@ -725,9 +960,9 @@ namespace WinFormsCarStarter
                     {
                         command.CommandText = @"
                                               DELETE FROM Users;
+                                              DELETE FROM ActivityLog;
                                               ";
-                                              /* DELETE FROM Trips;
-                                              DELETE FROM Logs;
+                                              /*DELETE FROM Logs;
                                               DELETE FROM sqlite_sequence;
                                                 "; */
                         command.ExecuteNonQuery();
@@ -740,6 +975,43 @@ namespace WinFormsCarStarter
             }
         }
 
+        private void InsertFakeActivities()
+        {
+            using (var connection = new SqliteConnection("Data Source=carstarter.db"))
+            {
+                connection.Open();
+
+                var command = connection.CreateCommand();
+                DateTime now = DateTime.Now;
+                DateTime firstDayLastMonth = new DateTime(now.Year, now.Month, 1).AddMonths(-1);
+
+                command.CommandText = @"
+                    INSERT INTO ActivityLog (UserId, LogDate, ActivityMessage, IsStartEvent) VALUES
+                    ($UserId1, $LogDate1, $Message1, $IsStartEvent1),
+                    ($UserId2, $LogDate2, $Message2, $IsStartEvent2),
+                    ($UserId3, $LogDate3, $Message3, $IsStartEvent3);";
+
+                command.Parameters.AddWithValue("$UserId1", Session.CurrentUserID);
+                command.Parameters.AddWithValue("$LogDate1", firstDayLastMonth.AddDays(5));
+                command.Parameters.AddWithValue("$Message1", "Vehicle Started (Test)");
+                command.Parameters.AddWithValue("$IsStartEvent1", 1);
+
+                command.Parameters.AddWithValue("$UserId2", Session.CurrentUserID);
+                command.Parameters.AddWithValue("$LogDate2", firstDayLastMonth.AddDays(10));
+                command.Parameters.AddWithValue("$Message2", "Horn Activated (Test)");
+                command.Parameters.AddWithValue("$IsStartEvent2", 1);
+
+                command.Parameters.AddWithValue("$UserId3", Session.CurrentUserID);
+                command.Parameters.AddWithValue("$LogDate3", firstDayLastMonth.AddDays(15));
+                command.Parameters.AddWithValue("$Message3", "Lights Toggled (Test)");
+                command.Parameters.AddWithValue("$IsStartEvent3", 0);
+
+                command.ExecuteNonQuery();
+            }
+        }
+
+
+
         // ********************** START-UP PANEL EVENT HANDLERS *************************** //
         private void button_createAccount_Click(object sender, EventArgs e)
         {
@@ -747,7 +1019,8 @@ namespace WinFormsCarStarter
             if (string.IsNullOrEmpty(textBox_firstName.Text) ||
                (string.IsNullOrEmpty(textBox_lastName.Text) ||
                (string.IsNullOrEmpty(textBox_email.Text) ||
-               (string.IsNullOrEmpty(textBox_password.Text)))))
+               (string.IsNullOrEmpty(textBox_password.Text) ||
+               (string.IsNullOrEmpty(textBox_vin.Text))))))
             {
                 ShowNotification("Please fill in all fields", "stop");
                 return;
@@ -774,10 +1047,17 @@ namespace WinFormsCarStarter
                 return;
             }
 
+            if (textBox_vin.Text.Length < 17 || textBox_vin.Text.Length > 17)
+            {
+                ShowNotification("VIN must be exactly 17 characters long.", "stop");
+                return;
+            }
+
             InsertUser();
 
         }
 
+        // ^^^^^^ END ^^^^^^ //
 
         /************************ BOTTOM TAB EVENT HANDLERS ********************************/
         private void button_activity_Click(object sender, EventArgs e)
@@ -823,6 +1103,7 @@ namespace WinFormsCarStarter
                 senderButton.Text = "STOP";
                 senderButton.Font = new Font("Segoe UI", 12, FontStyle.Regular);
                 ShowNotification("Vehicle Started Successfully", "success");
+                LogActivity("Vehicle Started", true);
             }
             else
             {
@@ -830,6 +1111,7 @@ namespace WinFormsCarStarter
                 senderButton.Text = "Start";
                 senderButton.Font = new Font("Segoe UI", 12, FontStyle.Regular);
                 ShowNotification("Vehicle Stopped Succesfuly", "stop");
+                LogActivity("Vehicle Stopped", false);
             }
 
             senderButton.Invalidate();
@@ -850,11 +1132,13 @@ namespace WinFormsCarStarter
         private void roundButton_lock_Click(object sender, EventArgs e)
         {
             ShowNotification("Vehicle Locked Successfully", "success");
+            LogActivity("Vehicle Locked", false);
         }
 
         private void roundButton_unlock_Click(object sender, EventArgs e)
         {
             ShowNotification("Vehicle Unlocked Successfully", "success");
+            LogActivity("Vehicle Unlocked", true);
         }
 
         private void SlidePanel_MouseDown(object sender, MouseEventArgs e)
@@ -894,6 +1178,7 @@ namespace WinFormsCarStarter
                 senderButton.Text = "Turn Lights OFF";
                 senderButton.Font = new Font("Segoe UI", 8, FontStyle.Regular);
                 ShowNotification("Vehicle Lights Turned On Successfully", "success");
+                LogActivity("Vehicle Lights Turned On", true);
             }
             else
             {
@@ -901,6 +1186,7 @@ namespace WinFormsCarStarter
                 senderButton.Text = "Turn Lights On";
                 senderButton.Font = new Font("Segoe UI", 8, FontStyle.Regular);
                 ShowNotification("Vehicle Lights Turned OFF Successfully", "stop");
+                LogActivity("Vehicle Lights Turned Off", false);
             }
         }
 
@@ -916,6 +1202,7 @@ namespace WinFormsCarStarter
                 senderButton.Text = "Turn Hazards OFF";
                 senderButton.Font = new Font("Segoe UI", 7, FontStyle.Regular);
                 ShowNotification("Vehicle Hazards Turned On Successfully", "success");
+                LogActivity("Vehicle Hazards Turned On", true);
             }
             else
             {
@@ -923,12 +1210,14 @@ namespace WinFormsCarStarter
                 senderButton.Text = "Turn Hazards On";
                 senderButton.Font = new Font("Segoe UI", 7, FontStyle.Regular);
                 ShowNotification("Vehicle Hazards Turned OFF Successfully", "stop");
+                LogActivity("Vehicle Hazards Turned Off", false);
             }
         }
 
         private void button_horn_Click(object sender, EventArgs e)
         {
             ShowNotification("Vehicle Horn Honked Successfully", "success");
+            LogActivity("Vehicle Horn Honked", true);
         }
 
         private void button_windows_Click(object sender, EventArgs e)
@@ -943,6 +1232,7 @@ namespace WinFormsCarStarter
                 senderButton.Text = "CLOSE windows";
                 senderButton.Font = new Font("Segoe UI", 8, FontStyle.Regular);
                 ShowNotification("Vehicle Windows Opened Successfully", "success");
+                LogActivity("Vehicle Windows Opened", true);
             }
             else
             {
@@ -950,14 +1240,27 @@ namespace WinFormsCarStarter
                 senderButton.Text = "Open Windows";
                 senderButton.Font = new Font("Segoe UI", 8, FontStyle.Regular);
                 ShowNotification("Vehicle Windows CLOSED Successfully", "stop");
+                LogActivity("Vehicle Windows Closed", false);
             }
         }
 
         private void button_trunk_Click(object sender, EventArgs e)
         {
             ShowNotification("Vehicle Trunk Opened Successfully", "success");
+            LogActivity("Vehicle Trunk Opened", true);
         }
 
+        // ^^^^^^^^^ END ^^^^^^^^^^^ //
+
+        // ************* ACTIVITY PAGE HNADLERS *************** //
+        private void ComboBox_activityDate_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            flowlayoutPanel_activities.Controls.Clear();
+            LoadActivityLogs();
+        }
+
+        // ^^^^^^^^^^ END ^^^^^^^^^^^ //
+        
         /************************** ROUND BUTTON CLASS *********************************/
         // Class for making normal buttons into round buttons for home tab
         public class RoundButton : Button

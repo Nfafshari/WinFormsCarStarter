@@ -325,10 +325,6 @@ namespace WinFormsCarStarter
             button_createAccount.Click += button_createAccount_Click;
             panel_startUp.Controls.Add(button_createAccount);
 
-            // Show home tab on startup
-            //ShowTab(panel_home);
-            //ActiveTab(button_home);
-
             // ***************************************************** Diagnostics ****************************************************** //
             // Clock
             Label label_time = new Label()

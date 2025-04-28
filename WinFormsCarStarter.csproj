@@ -58,6 +58,9 @@
     <None Update="icons\home.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="icons\image_vehicleStatus.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="icons\nav.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

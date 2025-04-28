@@ -29,6 +29,17 @@ namespace WinFormsCarStarter
         private ProgressBar progressBar_temp = new ProgressBar();
         private ProgressBar progressBar_oil = new ProgressBar();
         private ProgressBar progressBar_fuel = new ProgressBar();
+        private Panel panel_editVehicle;
+        private TextBox textBox_tirePressure;
+        private TextBox textBox_make;
+        private TextBox textBox_model;
+        private TextBox textBox_year;
+        private TextBox textBox_oilLevel;
+        private TextBox textBox_batteryLife;
+        private TextBox textBox_miles;
+        private TextBox textBox_engineTmp;
+        private TextBox textBox_internalTmp;
+        private Button button_saveChanges;
         private TextBox textBox_firstName = new TextBox();
         private TextBox textBox_lastName = new TextBox();
         private TextBox textBox_email = new TextBox();
@@ -38,6 +49,7 @@ namespace WinFormsCarStarter
         private ComboBox comboBox_activityDate = new ComboBox();
         private Panel slidePanel;
         private FlowLayoutPanel flowlayoutPanel_activities = new FlowLayoutPanel();
+        private FlowLayoutPanel flowLayoutPanel_vehicleStatus = new FlowLayoutPanel();
         private bool isStartStopToggled = false;
         private bool isLightsToggled = false;
         private bool isHazardsToggled = false;
@@ -145,6 +157,10 @@ namespace WinFormsCarStarter
             {
                 connection.Open();
 
+                var enforceForeignKey = connection.CreateCommand();
+                enforceForeignKey.CommandText = "PRAGMA foreign_keys = ON;";
+                enforceForeignKey.ExecuteNonQuery();
+
                 var dropUsers = new SqliteCommand("DROP TABLE IF EXISTS Users;", connection);
                 dropUsers.ExecuteNonQuery();
 
@@ -162,8 +178,9 @@ namespace WinFormsCarStarter
                 var createUserTable = new SqliteCommand(userTableCmd, connection);
                 createUserTable.ExecuteNonQuery();
 
-                var dropTable = new SqliteCommand("DROP TABLE IF EXISTS ActivityLog;", connection);
-                dropTable.ExecuteNonQuery();
+                var dropActivities = new SqliteCommand("DROP TABLE IF EXISTS ActivityLog;", connection);
+                dropActivities.ExecuteNonQuery();
+
 
                 string activityTableCmd = @"
                     CREATE TABLE IF NOT EXISTS ActivityLog (
@@ -171,11 +188,34 @@ namespace WinFormsCarStarter
                         UserId INTEGER NOT NULL,
                         LogDate DATETIME NOT NULL, 
                         ActivityMessage TEXT NOT NULL,
-                        IsStartEvent INTEGER NOT NULL
+                        IsStartEvent INTEGER NOT NULL,
+                        FOREIGN KEY (UserId) REFERENCES Users(UserId) ON DELETE CASCADE
                     );";
 
                 var createActivityLog = new SqliteCommand(activityTableCmd, connection);
                 createActivityLog.ExecuteNonQuery();
+
+                var dropVehicle = new SqliteCommand("DROP TABLE IF EXISTS VehicleLog;", connection);
+                dropVehicle.ExecuteNonQuery();
+
+                string VehicleTableCmd = @"
+                    CREATE TABLE IF NOT EXISTS VehicleLog (
+                        Make TEXT NOT NULL,
+                        Model TEXT NOT NULL,
+                        Year INTEGER NOT NULL,
+                        VehicleId INTEGER PRIMARY KEY AUTOINCREMENT,
+                        UserId INTEGER NOT NULL,
+                        TirePressure TEXT NOT NULL, 
+                        OilLevel TEXT NOT NULL,
+                        BatteryLife TEXT NOT NULL,
+                        Miles FLOAT NOT NULL,
+                        EngineTmp INTEGER NOT NULL,
+                        InternalTmp INTEGER NOT NULL,
+                        FOREIGN KEY (UserId) REFERENCES Users(UserId) ON DELETE CASCADE
+                    );";
+
+                var createVehicleLog = new SqliteCommand(VehicleTableCmd, connection);
+                createVehicleLog.ExecuteNonQuery();
             }
 
             // ******************** INITIAL STARTUP SCREEN ********************* //
@@ -637,12 +677,12 @@ namespace WinFormsCarStarter
 
             // ^^^ END of Home Tab section ^^^ //
 
-            // *********************** Activity Tab *********************** //
+            // *************************************************** Activity Tab ********************************************************************* //
             Label label_activity = new Label()
             {
                 Text = "Activities",
                 Font = new Font("Segoe UI", 14, FontStyle.Bold),
-                Location = new Point(95, 30),
+                Location = new Point(95, 20),
             };
             panel_activity.Controls.Add(label_activity);
 
@@ -685,19 +725,60 @@ namespace WinFormsCarStarter
             // Load the activities into the activity tab
             LoadActivityLogs();
 
-            // ^^^^^^^^^^^^^^^^^^^ END ^^^^^^^^^^^^^^^^^^^ //
+            // ^^^^^^^^^^^^^^^^^^^ END ACTIVITY ^^^^^^^^^^^^^^^^^^^ //
 
-            // ******************************************************* TRIPS TAB ******************************************************* //
+            // ******************************************************* STATUS TAB ******************************************************* //
+            panel_status.BackColor = Color.White;
+            BuildEditVehiclePanel();
+
             Label label_status = new Label()
             {
-                Location = new Point(100, 200),
-                Size = new Size(50, 50),
-                Text = "Vehicle Status",
-                Font = new Font("Segoe UI", 14, FontStyle.Regular),
+                Location = new Point(100, 20),
+                AutoSize = true,
+                Text = "Status",
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
             };
             panel_status.Controls.Add(label_status);
 
+            PictureBox pictureBox_vehicleStatus = new PictureBox()
+            {
+                Image = Image.FromFile("icons\\image_vehicleStatus.jpg"),
+                Location = new Point(10, 45),
+                Size = new Size(235, 170),
+                SizeMode = PictureBoxSizeMode.StretchImage,
+            };
+            panel_status.Controls.Add(pictureBox_vehicleStatus);
+
+            flowLayoutPanel_vehicleStatus = new FlowLayoutPanel()
+            {
+                Size = new Size(panel_status.Width, 175),
+                Location = new Point(Left, 220),
+                BackColor = Color.White,
+                FlowDirection = FlowDirection.TopDown,
+            };
+            panel_status.Controls.Add(flowLayoutPanel_vehicleStatus);
+
+            Button button_updateVehicle = new Button
+            {
+                Text = "Update Vehicle Info?",
+                Location = new Point(10, 400),
+                Width = 200,
+                Height = 30,
+                Margin = new Padding(10),
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                BackColor = Color.MediumPurple,
+                ForeColor = Color.Black,
+                FlatStyle = FlatStyle.Flat,
+            };
+            button_updateVehicle.FlatAppearance.BorderSize = 2;
+            button_updateVehicle.FlatAppearance.BorderColor = Color.Black;
+            CornerRadius(button_updateVehicle, 10);
+            button_updateVehicle.Click += Button_updateVehicle_Click;
+            panel_status.Controls.Add(button_updateVehicle);
+
         }
+
+        // ^^^^^^^^^^^^^^^^^^ END ^^^^^^^^^^^^^^^^^^^^ //
 
         /************** GLOBAL METHODS *************/
         // ShowTab -- makes the tab (panel) visible depending on which button is clicked
@@ -784,6 +865,39 @@ namespace WinFormsCarStarter
                 button_profile.ImageIndex = 9;
         }
 
+        // TruncateTables -- deletes table information on close
+        private void TruncateTables()
+        {
+            try
+            {
+                using (var connection = new SqliteConnection("Data Source=carstarter.db"))
+                {
+                    connection.Open();
+                    var enforceForeignKey = connection.CreateCommand();
+                    enforceForeignKey.CommandText = "PRAGMA foreign_keys = ON;";
+                    enforceForeignKey.ExecuteNonQuery();
+
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = @"
+                                              DELETE FROM Users;
+                                              DELETE FROM ActivityLog;
+                                              DELETE FROM VehicleLog;
+                                              ";
+                        /*DELETE FROM TripsLog;
+                          "; */
+                        command.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+
+        // ************************* ACTIVITY TAB METHODS ************************** //
         // InsertUser -- inserts user information into database
         private void InsertUser()
         {
@@ -812,6 +926,10 @@ namespace WinFormsCarStarter
             {
                 connection.Open();
 
+                var enforceForeignKey = connection.CreateCommand();
+                enforceForeignKey.CommandText = "PRAGMA foreign_keys = ON;";
+                enforceForeignKey.ExecuteNonQuery();
+
                 using (var cmd = new SqliteCommand(insertQuery, connection))
                 {
                     cmd.Parameters.AddWithValue("@FirstName", textBox_firstName.Text);
@@ -828,6 +946,7 @@ namespace WinFormsCarStarter
                         {
                             Session.CurrentUserID = Convert.ToInt32(result);
                             InsertFakeActivities();
+                            InsertRandomVehicleData(Session.CurrentUserID);
                         }
 
                         ShowTab(panel_home);
@@ -859,6 +978,10 @@ namespace WinFormsCarStarter
             using (var connection = new SqliteConnection("Data Source=carstarter.db"))
             {
                 connection.Open();
+
+                var enforceForeignKey = connection.CreateCommand();
+                enforceForeignKey.CommandText = "PRAGMA foreign_keys = ON;";
+                enforceForeignKey.ExecuteNonQuery();
 
                 var command = connection.CreateCommand();
                 command.CommandText = @"
@@ -913,6 +1036,10 @@ namespace WinFormsCarStarter
             {
                 connection.Open();
 
+                var enforceForeignKey = connection.CreateCommand();
+                enforceForeignKey.CommandText = "PRAGMA foreign_keys = ON;";
+                enforceForeignKey.ExecuteNonQuery();
+
                 var command = connection.CreateCommand();
 
                 string filter = comboBox_activityDate.SelectedItem.ToString();
@@ -965,40 +1092,14 @@ namespace WinFormsCarStarter
             }
         }
 
-
-
-        // TruncateTables -- deletes table information on close
-        private void TruncateTables()
-        {
-            try
-            {
-                using (var connection = new SqliteConnection("Data Source=carstarter.db"))
-                {
-                    connection.Open();
-                    using (var command = connection.CreateCommand())
-                    {
-                        command.CommandText = @"
-                                              DELETE FROM Users;
-                                              DELETE FROM ActivityLog;
-                                              ";
-                                              /*DELETE FROM Logs;
-                                              DELETE FROM sqlite_sequence;
-                                                "; */
-                        command.ExecuteNonQuery();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-        }
-
         private void InsertFakeActivities()
         {
             using (var connection = new SqliteConnection("Data Source=carstarter.db"))
             {
                 connection.Open();
+                var enforceForeignKey = connection.CreateCommand();
+                enforceForeignKey.CommandText = "PRAGMA foreign_keys = ON;";
+                enforceForeignKey.ExecuteNonQuery();
 
                 var command = connection.CreateCommand();
                 DateTime now = DateTime.Now;
@@ -1029,6 +1130,254 @@ namespace WinFormsCarStarter
             }
         }
 
+        // ************************************** STATUS TAB METHODS ********************************************** //
+        private void LoadVehicleStatus()
+        {
+            //flowLayoutPanel_vehicleStatus.Controls.Clear(); 
+
+            using (var connection = new SqliteConnection("Data Source=carstarter.db"))
+            {
+                connection.Open();
+
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                    SELECT Make, Model, Year, TirePressure, OilLevel, BatteryLife, Miles, EngineTmp, InternalTmp
+                    FROM VehicleLog
+                    WHERE UserId = $UserId
+                    LIMIT 1;";
+
+                command.Parameters.AddWithValue("$UserId", Session.CurrentUserID);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        AddStatusLabel($"Make: {reader.GetString(0)}");
+                        AddStatusLabel($"Model: {reader.GetString(1)}");
+                        AddStatusLabel($"Year: {reader.GetInt32(2)}");
+                        AddStatusLabel($"Tire Pressure: {reader.GetString(3)}");
+                        AddStatusLabel($"Oil Level: {reader.GetString(4)}");
+                        AddStatusLabel($"Battery Life: {reader.GetString(5)}");
+                        AddStatusLabel($"Miles: {reader.GetFloat(6)}");
+                        AddStatusLabel($"Engine Temperature: {reader.GetInt32(7)} °C");
+                        AddStatusLabel($"Internal Temperature: {reader.GetInt32(8)} °C");
+                    }
+                    else
+                    {
+                        AddStatusLabel("No vehicle information found.");
+                    }
+                }
+            }
+        }
+
+        private void AddStatusLabel(string text)
+        {
+            Label label = new Label
+            {
+                Text = text,
+                AutoSize = true,
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                ForeColor = Color.Black,
+                Margin = new Padding(10, 5, 10, 5),
+            };
+
+            flowLayoutPanel_vehicleStatus.Controls.Add(label);
+        }
+
+        private void InsertRandomVehicleData(int userId)
+        {
+            using (var connection = new SqliteConnection("Data Source=carstarter.db"))
+            {
+                connection.Open();
+
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                    INSERT INTO VehicleLog (Make, Model, Year, VehicleId, UserId, TirePressure, OilLevel, BatteryLife, Miles, EngineTmp, InternalTmp)
+                    VALUES ($Make, $Model, $Year, NULL, $UserId, $TirePressure, $OilLevel, $BatteryLife, $Miles, $EngineTmp, $InternalTmp);";
+
+                Random rand = new Random();
+
+                command.Parameters.AddWithValue("$Make", "Toyota");
+                command.Parameters.AddWithValue("$Model", "Camry");
+                command.Parameters.AddWithValue("$Year", 2020);
+                command.Parameters.AddWithValue("$UserId", userId);
+                command.Parameters.AddWithValue("$TirePressure", $"{rand.Next(30, 36)} PSI"); 
+                command.Parameters.AddWithValue("$OilLevel", rand.NextDouble() < 0.8 ? "Good" : "Low"); 
+                command.Parameters.AddWithValue("$BatteryLife", $"{rand.Next(70, 100)}%"); 
+                command.Parameters.AddWithValue("$Miles", Math.Round(rand.NextDouble() * 20000 + 10000, 2)); 
+                command.Parameters.AddWithValue("$EngineTmp", rand.Next(70, 110)); 
+                command.Parameters.AddWithValue("$InternalTmp", rand.Next(18, 30)); 
+
+                command.ExecuteNonQuery();
+            }
+        }
+
+        private void LoadVehicleDataIntoEditFields()
+        {
+            flowLayoutPanel_vehicleStatus.Controls.Clear(); 
+
+            using (var connection = new SqliteConnection("Data Source=carstarter.db"))
+            {
+                connection.Open();
+
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                    SELECT TirePressure, OilLevel, BatteryLife, Miles, EngineTmp, InternalTmp
+                    FROM VehicleLog
+                    WHERE UserId = $UserId
+                    LIMIT 1;";
+
+                command.Parameters.AddWithValue("$UserId", Session.CurrentUserID);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        textBox_tirePressure.Text = reader.GetString(0);
+                        textBox_oilLevel.Text = reader.GetString(1);
+                        textBox_batteryLife.Text = reader.GetString(2);
+                        textBox_miles.Text = reader.GetFloat(3).ToString();
+                        textBox_engineTmp.Text = reader.GetInt32(4).ToString();
+                        textBox_internalTmp.Text = reader.GetInt32(5).ToString();
+                    }
+                }
+            }
+        }
+
+        private void Button_saveChanges_Click(object sender, EventArgs e)
+        {
+            if (!float.TryParse(textBox_miles.Text, out float miles))
+            {
+                MessageBox.Show("Please enter a valid number for Miles.", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!int.TryParse(textBox_engineTmp.Text, out int engineTemp))
+            {
+                MessageBox.Show("Please enter a valid integer for Engine Temperature.", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!int.TryParse(textBox_internalTmp.Text, out int internalTemp))
+            {
+                MessageBox.Show("Please enter a valid integer for Internal Temperature.", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            using (var connection = new SqliteConnection("Data Source=carstarter.db"))
+            {
+                connection.Open();
+
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                UPDATE VehicleLog
+                SET TirePressure = $TirePressure,
+                OilLevel = $OilLevel,
+                BatteryLife = $BatteryLife,
+                Miles = $Miles,
+                EngineTmp = $EngineTmp,
+                InternalTmp = $InternalTmp
+                WHERE UserId = $UserId;";
+
+                command.Parameters.AddWithValue("$TirePressure", textBox_tirePressure.Text);
+                command.Parameters.AddWithValue("$OilLevel", textBox_oilLevel.Text);
+                command.Parameters.AddWithValue("$BatteryLife", textBox_batteryLife.Text);
+                command.Parameters.AddWithValue("$Miles", miles);
+                command.Parameters.AddWithValue("$EngineTmp", engineTemp);
+                command.Parameters.AddWithValue("$InternalTmp", internalTemp);
+                command.Parameters.AddWithValue("$UserId", Session.CurrentUserID);
+
+                command.ExecuteNonQuery();
+            }
+
+            LogActivity("Updated vehicle information.", true);
+
+            ShowNotification("Vehicle information updated successfully!", "Success");
+
+            panel_editVehicle.Visible = false;
+            flowLayoutPanel_vehicleStatus.Visible = true;
+            LoadVehicleStatus(); // Reload updated vehicle info
+        }
+
+
+        private void BuildEditVehiclePanel()
+        {
+            panel_editVehicle = new Panel
+            {
+                Size = new Size(panel_status.Width, panel_status.Height),
+                Location = new Point(0, 0),
+                BackColor = Color.White,
+                Visible = false
+            };
+            panel_status.Controls.Add(panel_editVehicle);
+
+            // Create FlowLayoutPanel inside panel_editVehicle
+            FlowLayoutPanel flowLayout_editFields = new FlowLayoutPanel()
+            {
+                Size = new Size(panel_editVehicle.Width, 350),
+                Location = new Point(Left, 30),
+                FlowDirection = FlowDirection.TopDown,
+                WrapContents = false,
+                AutoScroll = true,
+                BackColor = Color.White,
+            };
+            panel_editVehicle.Controls.Add(flowLayout_editFields);
+
+            // Helper function to add label + textbox vertically
+            void AddField(string labelText, ref TextBox textBox)
+            {
+                Label label = new Label
+                {
+                    Text = labelText,
+                    Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                    AutoSize = true,
+                };
+
+                textBox = new TextBox
+                {
+                    Width = 100,
+                    Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                    Margin = new Padding(10,0,0, 5)
+                };
+
+                flowLayout_editFields.Controls.Add(label);
+                flowLayout_editFields.Controls.Add(textBox);
+            }
+
+            AddField("Tire Pressure (PSI):", ref textBox_tirePressure);
+            AddField("Oil Level:", ref textBox_oilLevel);
+            AddField("Battery Life (%):", ref textBox_batteryLife);
+            AddField("Miles:", ref textBox_miles);
+            AddField("Engine Temp (°C):", ref textBox_engineTmp);
+            AddField("Internal Temp (°C):", ref textBox_internalTmp);
+
+            // Save Changes Button
+            button_saveChanges = new Button
+            {
+                Text = "Save Changes?",
+                Location = new Point(20, 380),
+                Width = 200,
+                Height = 45,
+                BackColor = Color.MediumPurple,
+                ForeColor = Color.Black,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+            };
+            button_saveChanges.FlatAppearance.BorderSize = 2;
+            button_saveChanges.FlatAppearance.BorderColor = Color.Black;
+            CornerRadius(button_saveChanges, 10);
+            button_saveChanges.Click += Button_saveChanges_Click;
+
+            panel_editVehicle.Controls.Add(button_saveChanges);
+        }
+
+
+        private void Button_updateVehicle_Click(object sender, EventArgs e)
+        {
+            LoadVehicleDataIntoEditFields(); // load current values
+            flowLayoutPanel_vehicleStatus.Visible = false;
+            panel_editVehicle.Visible = true;
+        }
 
 
         // ********************** START-UP PANEL EVENT HANDLERS *************************** //
@@ -1089,6 +1438,7 @@ namespace WinFormsCarStarter
         {
             ShowTab(panel_status);
             ActiveTab(button_status);
+            LoadVehicleStatus();
         }
 
         private void button_home_Click(object sender, EventArgs e)

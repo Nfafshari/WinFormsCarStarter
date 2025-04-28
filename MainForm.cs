@@ -12,6 +12,17 @@ namespace WinFormsCarStarter
     public partial class MainForm : Form
     {
         // **** Global variables (private to MainForm) **** //
+        private Button button_profile = new Button();
+        private Button button_trips = new Button();
+        private Button button_home = new Button();
+        private Button button_status = new Button();
+        private Button button_activity = new Button();
+        private Panel panel_activity = new Panel();
+        private Panel panel_status = new Panel();
+        private Panel panel_home = new Panel();
+        private Panel panel_trips = new Panel();
+        private Panel panel_profile = new Panel();
+        private Panel panel_startUp = new Panel();
         // Home Tab Variables
         private ImageList imageList = new ImageList();
         private ImageList active_imageList = new ImageList();
@@ -315,10 +326,10 @@ namespace WinFormsCarStarter
             panel_startUp.Controls.Add(button_createAccount);
 
             // Show home tab on startup
-            ShowTab(panel_home);
-            ActiveTab(button_home);
+            //ShowTab(panel_home);
+            //ActiveTab(button_home);
 
-            // ******* Diagnostics ******** //
+            // ***************************************************** Diagnostics ****************************************************** //
             // Clock
             Label label_time = new Label()
             {
@@ -360,7 +371,7 @@ namespace WinFormsCarStarter
              * Includes all tab customization
              */
 
-            /*************** HOME TAB ******************/
+            /****************************************************** HOME TAB ***************************************************************/
             Label label_home = new Label()
             {
                 Text = "Home",
@@ -370,7 +381,7 @@ namespace WinFormsCarStarter
             panel_home.Controls.Add(label_home);
 
             // Picture box for temperature image
-            pictureBox_temp = new PictureBox()
+            PictureBox pictureBox_temp = new PictureBox()
             {
                 Image = Image.FromFile("icons\\temperature.png"),
                 Size = new Size(30, 30),
@@ -402,7 +413,7 @@ namespace WinFormsCarStarter
             panel_home.Controls.Add(label_temperature);
 
             // Picture box for oil image
-            pictureBox_oil = new PictureBox()
+            PictureBox pictureBox_oil = new PictureBox()
             {
                 Image = Image.FromFile("icons\\oil.png"),
                 Size = new Size(40, 40),
@@ -434,7 +445,7 @@ namespace WinFormsCarStarter
             panel_home.Controls.Add(label_oil);
 
             // Picture box for fuel image
-            pictureBox_fuel = new PictureBox()
+            PictureBox pictureBox_fuel = new PictureBox()
             {
                 Image = Image.FromFile("icons\\fuel.png"),
                 Size = new Size(30, 30),
@@ -678,6 +689,17 @@ namespace WinFormsCarStarter
             // Load the activities into the activity tab
             LoadActivityLogs();
 
+            // ^^^^^^^^^^^^^^^^^^^ END ^^^^^^^^^^^^^^^^^^^ //
+
+            // ******************************************************* TRIPS TAB ******************************************************* //
+            Label label_status = new Label()
+            {
+                Location = new Point(100, 200),
+                Size = new Size(50, 50),
+                Text = "Vehicle Status",
+                Font = new Font("Segoe UI", 14, FontStyle.Regular),
+            };
+            panel_status.Controls.Add(label_status);
 
         }
 
@@ -691,6 +713,7 @@ namespace WinFormsCarStarter
             panel_home.Visible = false;
             panel_trips.Visible = false;
             panel_profile.Visible = false;
+            panel_startUp.Visible = false;
 
             // Show parameter tab
             visibleTab.Visible = true;
@@ -777,7 +800,7 @@ namespace WinFormsCarStarter
                 comboBox_vehicleType.SelectedIndex == 0)
             {
                 ShowNotification("Please fill in all fields correctly.", "stop");
-                return; // Don't insert anything
+                return; 
             }
 
             string dbPath = "carstarter.db";

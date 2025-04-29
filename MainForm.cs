@@ -857,7 +857,7 @@ namespace WinFormsCarStarter
             panel_trips.Controls.Add(comboBox_tripDate);
 
             // *********************************** PROFILE TAB ******************************** //
-            panel_trips.BackColor = Color.White;
+            panel_profile.BackColor = Color.White;
 
             Label label_profile = new Label()
             {
@@ -871,7 +871,7 @@ namespace WinFormsCarStarter
             flowLayoutPanel_profile = new FlowLayoutPanel()
             {
                 Size = new Size(panel_status.Width, 400),
-                Location = new Point(Left, 40),
+                Location = new Point(Left, 45),
                 BackColor = Color.White,
                 FlowDirection = FlowDirection.TopDown,
                 AutoScroll = true,
@@ -898,7 +898,8 @@ namespace WinFormsCarStarter
                 AutoSize = true,
                 ForeColor = Color.Black,
                 Location = new Point(70, 130),
-                TextAlign = ContentAlignment.MiddleCenter
+                TextAlign = ContentAlignment.MiddleCenter,
+                Margin = new Padding(40, 0, 0, 0)
             };
             label_fullName.Left = (panel_profile.Width - label_fullName.Width) / 2;
             flowLayoutPanel_profile.Controls.Add(label_fullName);
@@ -911,7 +912,8 @@ namespace WinFormsCarStarter
                 Font = new Font("Segoe UI", 10, FontStyle.Regular),
                 ForeColor = Color.Gray,
                 Location = new Point((panel_profile.Width - 200) / 2, 165),
-                TextAlign = ContentAlignment.MiddleCenter
+                TextAlign = ContentAlignment.MiddleCenter,
+                Margin = new Padding(80, 0, 0, 0)
             };
             label_profileEmail.Left = (panel_profile.Width - label_profileEmail.Width) / 2;
             flowLayoutPanel_profile.Controls.Add(label_profileEmail);
@@ -922,7 +924,8 @@ namespace WinFormsCarStarter
                 BackColor = Color.LightGray,
                 Height = 1,
                 Width = 200,
-                Location = new Point((panel_profile.Width - 200) / 2, 200)
+                Location = new Point((panel_profile.Width - 200) / 2, 200),
+                Margin = new Padding(40, 0, 0, 0)
             };
             flowLayoutPanel_profile.Controls.Add(divider);
 
@@ -933,6 +936,7 @@ namespace WinFormsCarStarter
                 AutoSize = true,
                 Font = new Font("Segoe UI", 10, FontStyle.Regular),
                 Location = new Point(50, 230),
+                Margin = new Padding(40, 0, 0, 0)
             };
             flowLayoutPanel_profile.Controls.Add(label_vehicleType);
 
@@ -942,24 +946,11 @@ namespace WinFormsCarStarter
                 AutoSize = true,
                 Font = new Font("Segoe UI", 10, FontStyle.Regular),
                 Location = new Point(50, 260),
+                Margin = new Padding(40, 0, 0, 0)
             };
             flowLayoutPanel_profile.Controls.Add(label_profileVin);
 
-            // 6. Edit Profile Button
-            Button button_editProfile = new Button
-            {
-                Text = "Edit Profile",
-                Size = new Size(200, 40),
-                Location = new Point((panel_profile.Width - 200) / 2, 310),
-                BackColor = Color.MediumPurple,
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold)
-            };
-            button_editProfile.FlatAppearance.BorderSize = 2;
-            button_editProfile.FlatAppearance.BorderColor = Color.Black;
-            CornerRadius(button_editProfile, 10);
-            flowLayoutPanel_profile.Controls.Add(button_editProfile);
+            
 
             // 7. Log Out Button
             Button button_logout = new Button
@@ -970,7 +961,8 @@ namespace WinFormsCarStarter
                 BackColor = Color.Red,
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Margin = new Padding(40, 0, 20, 0)
             };
             button_logout.FlatAppearance.BorderSize = 2;
             button_logout.FlatAppearance.BorderColor = Color.Black;

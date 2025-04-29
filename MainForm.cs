@@ -6,12 +6,25 @@ using static WinFormsCarStarter.MainForm;
 using System.Runtime.CompilerServices;
 using Microsoft.Data.Sqlite;
 using System.IO;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Rebar;
 
 namespace WinFormsCarStarter
 {
     public partial class MainForm : Form
     {
         // **** Global variables (private to MainForm) **** //
+        private bool isStartStopToggled = false;
+        private bool isLightsToggled = false;
+        private bool isHazardsToggled = false;
+        private bool isWindowsToggled = false;
+        private bool isDragging = false;
+        private int dragStart;
+        private int originalPanelTop;
+        private int collapsedTop;
+        private int expandedTop;
+        private int UserId;
+
+        // Main Functionality Tab Setup
         private Button button_profile = new Button();
         private Button button_trips = new Button();
         private Button button_home = new Button();
@@ -23,17 +36,22 @@ namespace WinFormsCarStarter
         private Panel panel_trips = new Panel();
         private Panel panel_profile = new Panel();
         private Panel panel_startUp = new Panel();
+
         // Home Tab Variables
         private ImageList imageList = new ImageList();
         private ImageList active_imageList = new ImageList();
         private ProgressBar progressBar_temp = new ProgressBar();
         private ProgressBar progressBar_oil = new ProgressBar();
         private ProgressBar progressBar_fuel = new ProgressBar();
+        private Panel slidePanel;
+
+        // Activity Tab Variables
+        private ComboBox comboBox_activityDate = new ComboBox();
+        private FlowLayoutPanel flowlayoutPanel_activities = new FlowLayoutPanel();
+
+        // Status Tab Variables
         private Panel panel_editVehicle;
         private TextBox textBox_tirePressure;
-        private TextBox textBox_make;
-        private TextBox textBox_model;
-        private TextBox textBox_year;
         private TextBox textBox_oilLevel;
         private TextBox textBox_batteryLife;
         private TextBox textBox_miles;
@@ -46,20 +64,11 @@ namespace WinFormsCarStarter
         private TextBox textBox_password = new TextBox();
         private TextBox textBox_vin = new TextBox();
         private ComboBox comboBox_vehicleType = new ComboBox();
-        private ComboBox comboBox_activityDate = new ComboBox();
-        private Panel slidePanel;
-        private FlowLayoutPanel flowlayoutPanel_activities = new FlowLayoutPanel();
         private FlowLayoutPanel flowLayoutPanel_vehicleStatus = new FlowLayoutPanel();
-        private bool isStartStopToggled = false;
-        private bool isLightsToggled = false;
-        private bool isHazardsToggled = false;
-        private bool isWindowsToggled = false;
-        private bool isDragging = false;
-        private int dragStart;
-        private int originalPanelTop;
-        private int collapsedTop;
-        private int expandedTop;
-        private int UserId;
+
+        // Trips Tab Variables
+        private FlowLayoutPanel flowLayoutPanel_trips = new FlowLayoutPanel();
+        private ComboBox comboBox_tripDate = new ComboBox();
 
 
         public MainForm()
@@ -216,6 +225,22 @@ namespace WinFormsCarStarter
 
                 var createVehicleLog = new SqliteCommand(VehicleTableCmd, connection);
                 createVehicleLog.ExecuteNonQuery();
+
+                var dropTrips = new SqliteCommand("DROP TABLE IF EXISTS TripsLog;", connection);
+                dropTrips.ExecuteNonQuery();
+
+                string TripsTableCmd = @"
+                    CREATE TABLE IF NOT EXISTS TripsLog (
+                        TripId INTEGER PRIMARY KEY AUTOINCREMENT,
+                        UserId INTEGER NOT NULL,
+                        TripDate DATETIME NOT NULL, 
+                        LocatA TEXT NOT NULL,
+                        LocatB TEXT NOT NULL,
+                        FOREIGN KEY (UserId) REFERENCES Users(UserId) ON DELETE CASCADE
+                    );";
+
+                var createTripsLog = new SqliteCommand(TripsTableCmd, connection);
+                createTripsLog.ExecuteNonQuery();
             }
 
             // ******************** INITIAL STARTUP SCREEN ********************* //
@@ -712,7 +737,7 @@ namespace WinFormsCarStarter
             panel_activity.Controls.Add(comboBox_activityDate);
 
             // flow panel for list of activities
-            flowlayoutPanel_activities = new FlowLayoutPanel() 
+            flowlayoutPanel_activities = new FlowLayoutPanel()
             {
                 Size = new Size(285, 450),
                 Location = new Point(Left, 100),
@@ -776,9 +801,75 @@ namespace WinFormsCarStarter
             button_updateVehicle.Click += Button_updateVehicle_Click;
             panel_status.Controls.Add(button_updateVehicle);
 
+            // ^^^^^^^^^^^^^^^^^^ END ^^^^^^^^^^^^^^^^^^^^ //
+
+            // ********************************************* Trips Tab ************************************************** //
+            panel_trips.BackColor = Color.White;
+
+            Label label_trips = new Label()
+            {
+                Location = new Point(100, 20),
+                AutoSize = true,
+                Text = "Trips",
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+            };
+            panel_trips.Controls.Add(label_trips);
+
+            PictureBox pictureBox_gps = new PictureBox()
+            {
+                Image = Image.FromFile("icons\\gpsimg.png"),
+                Location = new Point(10, 45),
+                Size = new Size(235, 170),
+                SizeMode = PictureBoxSizeMode.StretchImage,
+            };
+            panel_trips.Controls.Add(pictureBox_gps);
+
+            flowLayoutPanel_trips = new FlowLayoutPanel()
+            {
+                Size = new Size(panel_status.Width, 200),
+                Location = new Point(Left, 240),
+                BackColor = Color.White,
+                FlowDirection = FlowDirection.TopDown,
+                AutoScroll = true,
+                WrapContents = false,
+            };
+            panel_trips.Controls.Add(flowLayoutPanel_trips);
+
+            comboBox_tripDate = new ComboBox()
+            {
+                Location = new Point(10, 215),
+                Size = new Size(150, 35),
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                DropDownStyle = ComboBoxStyle.DropDownList,
+            };
+
+            comboBox_tripDate.Items.Add("Today");
+            comboBox_tripDate.Items.Add("Previous Month");
+            comboBox_tripDate.Items.Add("Year to Date");
+            comboBox_tripDate.Items.Add("All");
+
+
+            comboBox_tripDate.SelectedIndex = 0;
+            comboBox_tripDate.SelectedIndexChanged += ComboBox_tripDate_SelectedIndexChanged;
+            panel_trips.Controls.Add(comboBox_tripDate);
+
+            // *********************************** PROFILE TAB ******************************** //
+            panel_trips.BackColor = Color.White;
+
+            Label label_profile = new Label()
+            {
+                Location = new Point(100, 20),
+                AutoSize = true,
+                Text = "Profile",
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+            };
+            panel_profile.Controls.Add(label_profile);
+
+
+
         }
 
-        // ^^^^^^^^^^^^^^^^^^ END ^^^^^^^^^^^^^^^^^^^^ //
+
 
         /************** GLOBAL METHODS *************/
         // ShowTab -- makes the tab (panel) visible depending on which button is clicked
@@ -947,6 +1038,7 @@ namespace WinFormsCarStarter
                             Session.CurrentUserID = Convert.ToInt32(result);
                             InsertFakeActivities();
                             InsertRandomVehicleData(Session.CurrentUserID);
+                            InsertFakeTrips();
                         }
 
                         ShowTab(panel_home);
@@ -1066,7 +1158,7 @@ namespace WinFormsCarStarter
                     command.Parameters.AddWithValue("$FirstDay", firstDay);
                     command.Parameters.AddWithValue("$LastDay", lastDay);
                 }
-                else if (filter == "This Year")
+                else if (filter == "Last Year")
                 {
                     query += "AND strftime('%Y', LogDate) = strftime('%Y', 'now') ORDER BY LogDate DESC ";
                 }
@@ -1192,8 +1284,8 @@ namespace WinFormsCarStarter
 
                 var command = connection.CreateCommand();
                 command.CommandText = @"
-                    INSERT INTO VehicleLog (Make, Model, Year, VehicleId, UserId, TirePressure, OilLevel, BatteryLife, Miles, EngineTmp, InternalTmp)
-                    VALUES ($Make, $Model, $Year, NULL, $UserId, $TirePressure, $OilLevel, $BatteryLife, $Miles, $EngineTmp, $InternalTmp);";
+                    INSERT INTO VehicleLog (Make, Model, Year, UserId, TirePressure, OilLevel, BatteryLife, Miles, EngineTmp, InternalTmp)
+                    VALUES ($Make, $Model, $Year, $UserId, $TirePressure, $OilLevel, $BatteryLife, $Miles, $EngineTmp, $InternalTmp);";
 
                 Random rand = new Random();
 
@@ -1379,6 +1471,147 @@ namespace WinFormsCarStarter
             panel_editVehicle.Visible = true;
         }
 
+        // *************************************** TRIPS METHODS ****************************** //
+        private void DisplayTrip(string message)
+        {
+            Panel panel = new Panel
+            {
+                Size = new Size(230, 70),
+                Margin = new Padding(7),
+                BackColor = Color.MediumPurple,
+                BorderStyle = BorderStyle.FixedSingle,
+            };
+
+            PictureBox pictureBox = new PictureBox()
+            {
+                Image = Image.FromFile("icons\\trip1_image.jpg"),
+                Size = new Size(50, 50),
+                Location = new Point(10, 10),
+                SizeMode = PictureBoxSizeMode.StretchImage,
+            };
+
+            Label label = new Label
+            {
+                Text = message,
+                Location = new Point(70, 20),  // Adjust text to right of image,
+                Font = new Font("Segoe UI", 7, FontStyle.Regular),
+                ForeColor = Color.White,
+                TextAlign = ContentAlignment.MiddleLeft,
+            };
+
+            panel.Controls.Add(pictureBox); // add image inside panel
+            panel.Controls.Add(label);      // add label inside panel
+            CornerRadius(panel, 10);
+            flowLayoutPanel_trips.Controls.Add(panel);
+            flowLayoutPanel_trips.Controls.SetChildIndex(panel, 0); // show newest on top
+        }
+
+        private void LoadTrips()
+        {
+            using (var connection = new SqliteConnection("Data Source=carstarter.db"))
+            {
+                connection.Open();
+
+                var enforceForeignKey = connection.CreateCommand();
+                enforceForeignKey.CommandText = "PRAGMA foreign_keys = ON;";
+                enforceForeignKey.ExecuteNonQuery();
+
+                var command = connection.CreateCommand();
+
+                string filter = comboBox_tripDate.SelectedItem.ToString();
+                string query = @"
+            SELECT TripDate, LocatA, LocatB
+            FROM TripsLog
+            WHERE UserId = $UserId ";
+
+                if (filter == "Today")
+                {
+                    query += "AND date(TripDate) = date('now') ";
+                }
+                else if (filter == "Previous Month")
+                {
+                    DateTime now = DateTime.Now;
+                    DateTime firstDayLastMonth = new DateTime(now.Year, now.Month, 1).AddMonths(-1);
+                    DateTime lastDayLastMonth = new DateTime(now.Year, now.Month, 1).AddDays(-1);
+
+                    string firstDay = firstDayLastMonth.ToString("yyyy-MM-dd");
+                    string lastDay = lastDayLastMonth.ToString("yyyy-MM-dd");
+
+                    query += "AND date(TripDate) BETWEEN date($FirstDay) AND date($LastDay) ";
+                    command.Parameters.AddWithValue("$FirstDay", firstDay);
+                    command.Parameters.AddWithValue("$LastDay", lastDay);
+                }
+                else if (filter == "Year to Date")
+                {
+                    query += "AND strftime('%Y', TripDate) = strftime('%Y', 'now') ";
+                }
+
+                query += "ORDER BY TripDate DESC;";
+                command.CommandText = query;
+                command.Parameters.AddWithValue("$UserId", Session.CurrentUserID);
+
+                flowLayoutPanel_trips.Controls.Clear();  // Clear trips before loading
+
+                using (var reader = command.ExecuteReader())
+                {
+                    Random rand = new Random();
+
+                    while (reader.Read())
+                    {
+                        string logDateTime = reader.GetString(0);
+                        string locationA = reader.GetString(1);
+                        string locationB = reader.GetString(2);
+
+                        DateTime parsedDate = DateTime.Parse(logDateTime);
+                        DisplayTrip($"{parsedDate:MMM-dd-yyyy hh:mm:ss tt} - {locationA} to {locationB}. Avg Speed: {rand.Next(20, 80)} mph");
+                    }
+                }
+            }
+        }
+
+        private void InsertFakeTrips()
+        {
+            using (var connection = new SqliteConnection("Data Source=carstarter.db"))
+            {
+                connection.Open();
+                var enforceForeignKey = connection.CreateCommand();
+                enforceForeignKey.CommandText = "PRAGMA foreign_keys = ON;";
+                enforceForeignKey.ExecuteNonQuery();
+
+                var command = connection.CreateCommand();
+                DateTime now = DateTime.Now;
+                DateTime firstDayLastMonth = new DateTime(now.Year, now.Month, 1).AddMonths(-1);
+
+                command.CommandText = @"
+                    INSERT INTO TripsLog (UserId, TripDate, LocatA, LocatB) VALUES
+                    ($UserId1, $TripDate1, $LocatA1, $LocatB1),
+                    ($UserId2, $TripDate2, $LocatA2, $LocatB2),
+                    ($UserId3, $TripDate3, $LocatA3, $LocatB3);";
+
+                command.Parameters.AddWithValue("$UserId1", Session.CurrentUserID);
+                command.Parameters.AddWithValue("$TripDate1", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                command.Parameters.AddWithValue("$LocatA1", "123 ABC ST SE");
+                command.Parameters.AddWithValue("$LocatB1", "456 DEB AVE NW");
+
+                command.Parameters.AddWithValue("$UserId2", Session.CurrentUserID);
+                command.Parameters.AddWithValue("$TripDate2", firstDayLastMonth.AddDays(10));
+                command.Parameters.AddWithValue("$LocatA2", "307 Ronda ST SE");
+                command.Parameters.AddWithValue("$LocatB2", "912 Jerico AVE NW");
+
+                command.Parameters.AddWithValue("$UserId3", Session.CurrentUserID);
+                command.Parameters.AddWithValue("$TripDate3", DateTime.Now.AddYears(-1));
+                command.Parameters.AddWithValue("$LocatA3", "611 Main BLVD");
+                command.Parameters.AddWithValue("$LocatB3", "201 Townsquare Way");
+
+                command.ExecuteNonQuery();
+            }
+        }
+
+        private void ComboBox_tripDate_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            LoadTrips();
+        }
+
 
         // ********************** START-UP PANEL EVENT HANDLERS *************************** //
         private void button_createAccount_Click(object sender, EventArgs e)
@@ -1451,6 +1684,7 @@ namespace WinFormsCarStarter
         {
             ShowTab(panel_trips);
             ActiveTab(button_trips);
+            LoadTrips();
         }
 
         private void button_profile_Click(object sender, EventArgs e)

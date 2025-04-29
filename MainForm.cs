@@ -72,6 +72,10 @@ namespace WinFormsCarStarter
 
         // Profile Tab Variables
         private FlowLayoutPanel flowLayoutPanel_profile = new FlowLayoutPanel();
+        private Label label_fullName = new Label();
+        private Label label_profileEmail = new Label();
+        private Label label_profileVin = new Label();
+        private Label label_vehicleType = new Label();
 
 
         public MainForm()
@@ -885,13 +889,13 @@ namespace WinFormsCarStarter
                 Size = new Size(100, 100),
                 Image = Image.FromFile("icons\\6422378-200.png"), 
                 SizeMode = PictureBoxSizeMode.StretchImage,
-                BackColor = Color.LightGray,
-                Margin = new Padding(80, 0 , 30, 0)
+                BackColor = Color.Transparent,
+                Margin = new Padding(80, 10 , 0, 0)
             };
             flowLayoutPanel_profile.Controls.Add(profilePic);
 
             // 2. Full Name label
-            Label label_fullName = new Label
+            label_fullName = new Label
             {
                 Text = "FirstName LastName",
                 Font = new Font("Segoe UI", 14, FontStyle.Bold),
@@ -899,13 +903,12 @@ namespace WinFormsCarStarter
                 ForeColor = Color.Black,
                 Location = new Point(70, 130),
                 TextAlign = ContentAlignment.MiddleCenter,
-                Margin = new Padding(40, 0, 0, 0)
             };
             label_fullName.Left = (panel_profile.Width - label_fullName.Width) / 2;
             flowLayoutPanel_profile.Controls.Add(label_fullName);
 
             // 3. Email label
-            Label label_profileEmail = new Label
+            label_profileEmail = new Label
             {
                 Text = "you@example.com",
                 AutoSize = true,
@@ -913,7 +916,6 @@ namespace WinFormsCarStarter
                 ForeColor = Color.Gray,
                 Location = new Point((panel_profile.Width - 200) / 2, 165),
                 TextAlign = ContentAlignment.MiddleCenter,
-                Margin = new Padding(80, 0, 0, 0)
             };
             label_profileEmail.Left = (panel_profile.Width - label_profileEmail.Width) / 2;
             flowLayoutPanel_profile.Controls.Add(label_profileEmail);
@@ -925,28 +927,25 @@ namespace WinFormsCarStarter
                 Height = 1,
                 Width = 200,
                 Location = new Point((panel_profile.Width - 200) / 2, 200),
-                Margin = new Padding(40, 0, 0, 0)
             };
             flowLayoutPanel_profile.Controls.Add(divider);
 
             // 5. Car Info labels
-            Label label_vehicleType = new Label
+            label_vehicleType = new Label
             {
                 Text = "Vehicle Type: (ex: Hybrid)",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 10, FontStyle.Regular),
                 Location = new Point(50, 230),
-                Margin = new Padding(40, 0, 0, 0)
             };
             flowLayoutPanel_profile.Controls.Add(label_vehicleType);
 
-            Label label_profileVin = new Label
+            label_profileVin = new Label
             {
                 Text = "VIN: 1HGBH41JXMN109186",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 10, FontStyle.Regular),
                 Location = new Point(50, 260),
-                Margin = new Padding(40, 0, 0, 0)
             };
             flowLayoutPanel_profile.Controls.Add(label_profileVin);
 
@@ -962,7 +961,7 @@ namespace WinFormsCarStarter
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                Margin = new Padding(40, 0, 20, 0)
+                Margin = new Padding(30, 30, 0, 0)
             };
             button_logout.FlatAppearance.BorderSize = 2;
             button_logout.FlatAppearance.BorderColor = Color.Black;
@@ -1444,19 +1443,19 @@ namespace WinFormsCarStarter
         {
             if (!float.TryParse(textBox_miles.Text, out float miles))
             {
-                MessageBox.Show("Please enter a valid number for Miles.", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ShowNotification("Please enter a valid number for Miles.", "stop");
                 return;
             }
 
             if (!int.TryParse(textBox_engineTmp.Text, out int engineTemp))
             {
-                MessageBox.Show("Please enter a valid integer for Engine Temperature.", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ShowNotification("Please enter a valid integer for Engine Temperature.", "stop");
                 return;
             }
 
             if (!int.TryParse(textBox_internalTmp.Text, out int internalTemp))
             {
-                MessageBox.Show("Please enter a valid integer for Internal Temperature.", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ShowNotification("Please enter a valid integer for Internal Temperature.", "stop");
                 return;
             }
 
@@ -1762,6 +1761,206 @@ namespace WinFormsCarStarter
 
         }
 
+        // *********************************************** PROFILE TAB METHODS ************************************************ //
+        private void LoadProfileStatus()
+        {
+            //flowLayoutPanel_vehicleStatus.Controls.Clear(); 
+
+            using (var connection = new SqliteConnection("Data Source=carstarter.db"))
+            {
+                connection.Open();
+
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                    SELECT FirstName, LastName, Email, Vin, CarType
+                    FROM Users
+                    WHERE UserId = $UserId
+                    LIMIT 1;";
+
+                command.Parameters.AddWithValue("$UserId", Session.CurrentUserID);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        label_fullName.Text = ($"{reader.GetString(0)} {reader.GetString(1)}");
+                        label_profileEmail.Text = ($"{reader.GetString(2)}");
+                        label_profileVin.Text = ($"Vin: {reader.GetString(3)}");
+                        label_vehicleType.Text = ($"Vehicle Type: {reader.GetString(4)}");
+                    }
+                }
+            }
+        }
+
+        /*
+        private void LoadVehicleDataIntoEditFields()
+        {
+            flowLayoutPanel_vehicleStatus.Controls.Clear();
+
+            using (var connection = new SqliteConnection("Data Source=carstarter.db"))
+            {
+                connection.Open();
+
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                    SELECT TirePressure, OilLevel, BatteryLife, Miles, EngineTmp, InternalTmp
+                    FROM VehicleLog
+                    WHERE UserId = $UserId
+                    LIMIT 1;";
+
+                command.Parameters.AddWithValue("$UserId", Session.CurrentUserID);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        textBox_tirePressure.Text = reader.GetString(0);
+                        textBox_oilLevel.Text = reader.GetString(1);
+                        textBox_batteryLife.Text = reader.GetString(2);
+                        textBox_miles.Text = reader.GetFloat(3).ToString();
+                        textBox_engineTmp.Text = reader.GetInt32(4).ToString();
+                        textBox_internalTmp.Text = reader.GetInt32(5).ToString();
+                    }
+                }
+            }
+        }
+
+        private void Button_saveChanges_Click(object sender, EventArgs e)
+        {
+            if (!float.TryParse(textBox_miles.Text, out float miles))
+            {
+                ShowNotification("Please enter a valid number for Miles.", "stop");
+                return;
+            }
+
+            if (!int.TryParse(textBox_engineTmp.Text, out int engineTemp))
+            {
+                ShowNotification("Please enter a valid integer for Engine Temperature.", "stop");
+                return;
+            }
+
+            if (!int.TryParse(textBox_internalTmp.Text, out int internalTemp))
+            {
+                ShowNotification("Please enter a valid integer for Internal Temperature.", "stop");
+                return;
+            }
+
+            using (var connection = new SqliteConnection("Data Source=carstarter.db"))
+            {
+                connection.Open();
+
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                UPDATE VehicleLog
+                SET TirePressure = $TirePressure,
+                OilLevel = $OilLevel,
+                BatteryLife = $BatteryLife,
+                Miles = $Miles,
+                EngineTmp = $EngineTmp,
+                InternalTmp = $InternalTmp
+                WHERE UserId = $UserId;";
+
+                command.Parameters.AddWithValue("$TirePressure", textBox_tirePressure.Text);
+                command.Parameters.AddWithValue("$OilLevel", textBox_oilLevel.Text);
+                command.Parameters.AddWithValue("$BatteryLife", textBox_batteryLife.Text);
+                command.Parameters.AddWithValue("$Miles", miles);
+                command.Parameters.AddWithValue("$EngineTmp", engineTemp);
+                command.Parameters.AddWithValue("$InternalTmp", internalTemp);
+                command.Parameters.AddWithValue("$UserId", Session.CurrentUserID);
+
+                command.ExecuteNonQuery();
+            }
+
+            LogActivity("Updated vehicle information.", true);
+
+            ShowNotification("Vehicle information updated successfully!", "Success");
+
+            panel_editVehicle.Visible = false;
+            flowLayoutPanel_vehicleStatus.Visible = true;
+            LoadVehicleStatus(); // Reload updated vehicle info
+        }
+
+
+        private void BuildEditVehiclePanel()
+        {
+            panel_editVehicle = new Panel
+            {
+                Size = new Size(panel_status.Width, panel_status.Height),
+                Location = new Point(0, 0),
+                BackColor = Color.White,
+                Visible = false
+            };
+            panel_status.Controls.Add(panel_editVehicle);
+
+            // Create FlowLayoutPanel inside panel_editVehicle
+            FlowLayoutPanel flowLayout_editFields = new FlowLayoutPanel()
+            {
+                Size = new Size(panel_editVehicle.Width, 350),
+                Location = new Point(Left, 30),
+                FlowDirection = FlowDirection.TopDown,
+                WrapContents = false,
+                AutoScroll = true,
+                BackColor = Color.White,
+            };
+            panel_editVehicle.Controls.Add(flowLayout_editFields);
+
+            // Helper function to add label + textbox vertically
+            void AddField(string labelText, ref TextBox textBox)
+            {
+                Label label = new Label
+                {
+                    Text = labelText,
+                    Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                    AutoSize = true,
+                };
+
+                textBox = new TextBox
+                {
+                    Width = 100,
+                    Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                    Margin = new Padding(10, 0, 0, 5)
+                };
+
+                flowLayout_editFields.Controls.Add(label);
+                flowLayout_editFields.Controls.Add(textBox);
+            }
+
+            AddField("Tire Pressure (PSI):", ref textBox_tirePressure);
+            AddField("Oil Level:", ref textBox_oilLevel);
+            AddField("Battery Life (%):", ref textBox_batteryLife);
+            AddField("Miles:", ref textBox_miles);
+            AddField("Engine Temp (°C):", ref textBox_engineTmp);
+            AddField("Internal Temp (°C):", ref textBox_internalTmp);
+
+            // Save Changes Button
+            button_saveChanges = new Button
+            {
+                Text = "Save Changes?",
+                Location = new Point(20, 380),
+                Width = 200,
+                Height = 45,
+                BackColor = Color.MediumPurple,
+                ForeColor = Color.Black,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+            };
+            button_saveChanges.FlatAppearance.BorderSize = 2;
+            button_saveChanges.FlatAppearance.BorderColor = Color.Black;
+            CornerRadius(button_saveChanges, 10);
+            button_saveChanges.Click += Button_saveChanges_Click;
+
+            panel_editVehicle.Controls.Add(button_saveChanges);
+        }
+
+
+        private void Button_updateVehicle_Click(object sender, EventArgs e)
+        {
+            LoadVehicleDataIntoEditFields(); // load current values
+            flowLayoutPanel_vehicleStatus.Visible = false;
+            panel_editVehicle.Visible = true;
+        }
+        */
+
         // ^^^^^^ END ^^^^^^ //
 
         /************************ BOTTOM TAB EVENT HANDLERS ********************************/
@@ -1795,6 +1994,7 @@ namespace WinFormsCarStarter
         {
             ShowTab(panel_profile);
             ActiveTab(button_profile);
+            LoadProfileStatus();
         }
 
         /*************************** HOME PAGE EVENT HANDLERS *****************************/

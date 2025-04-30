@@ -972,7 +972,7 @@ namespace WinFormsCarStarter
 
             button_addVehicle = new Button
             {
-                Text = "Add Vehicle?",
+                Text = "Edit Vehicle?",
                 Width = 200,
                 Height = 45,
                 BackColor = Color.Orange,
@@ -984,26 +984,8 @@ namespace WinFormsCarStarter
             button_addVehicle.FlatAppearance.BorderSize = 2;
             button_addVehicle.FlatAppearance.BorderColor = Color.Black;
             CornerRadius(button_addVehicle, 10);
-            //button_saveChanges.Click += Button_saveChanges_Click;
+            button_addVehicle.Click += button_editVehicle_click;
             flowLayoutPanel_profile.Controls.Add(button_addVehicle);
-
-            button_removeVehicle = new Button
-            {
-                Text = "Remove Vehicle?",
-                Width = 200,
-                Height = 45,
-                BackColor = Color.OrangeRed,
-                ForeColor = Color.Black,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                Margin = new Padding(30, 5, 0, 0)
-            };
-            button_removeVehicle.FlatAppearance.BorderSize = 2;
-            button_removeVehicle.FlatAppearance.BorderColor = Color.Black;
-            CornerRadius(button_removeVehicle, 10);
-            //button_saveChanges.Click += Button_saveChanges_Click;
-            flowLayoutPanel_profile.Controls.Add(button_removeVehicle);
-
 
 
             Button button_logout = new Button
@@ -1015,7 +997,7 @@ namespace WinFormsCarStarter
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                Margin = new Padding(30, 30, 0, 0)
+                Margin = new Padding(30, 20, 0, 0)
             };
             button_logout.FlatAppearance.BorderSize = 2;
             button_logout.FlatAppearance.BorderColor = Color.Black;
@@ -2193,7 +2175,7 @@ namespace WinFormsCarStarter
             {
                 Text = "Welcome back!",
                 Font = new Font("Segoe UI", 14, FontStyle.Bold),
-                Location = new Point(80, 20),
+                Location = new Point(60, 20),
                 AutoSize = true
             };
             panel_login.Controls.Add(label_loginHeader);
@@ -2201,7 +2183,7 @@ namespace WinFormsCarStarter
             Label label_email = new Label()
             {
                 Text = "Email:",
-                Location = new Point(40, 70),
+                Location = new Point(30, 70),
                 AutoSize = true,
                 Font = new Font("Segoe UI", 10)
             };
@@ -2209,7 +2191,7 @@ namespace WinFormsCarStarter
 
             TextBox textBox_loginEmail = new TextBox()
             {
-                Location = new Point(40, 95),
+                Location = new Point(30, 95),
                 Width = 200
             };
             panel_login.Controls.Add(textBox_loginEmail);
@@ -2217,7 +2199,7 @@ namespace WinFormsCarStarter
             Label label_password = new Label()
             {
                 Text = "Password:",
-                Location = new Point(40, 130),
+                Location = new Point(30, 130),
                 AutoSize = true,
                 Font = new Font("Segoe UI", 10)
             };
@@ -2225,7 +2207,7 @@ namespace WinFormsCarStarter
 
             TextBox textBox_loginPassword = new TextBox()
             {
-                Location = new Point(40, 155),
+                Location = new Point(30, 155),
                 Width = 200,
                 UseSystemPasswordChar = true
             };
@@ -2234,7 +2216,7 @@ namespace WinFormsCarStarter
             Button button_login = new Button()
             {
                 Text = "Login",
-                Location = new Point(70, 200),
+                Location = new Point(50, 200),
                 Width = 150,
                 Height = 40,
                 BackColor = Color.MediumPurple,
@@ -2304,7 +2286,7 @@ namespace WinFormsCarStarter
             Button button_createAccount = new Button()
             {
                 Text = "Need an account? Click here!",
-                Location = new Point(50, 260),
+                Location = new Point(40, 260),
                 Width = 180,
                 FlatStyle = FlatStyle.Flat,
                 ForeColor = Color.MediumPurple,
@@ -2332,168 +2314,182 @@ namespace WinFormsCarStarter
             panel_login.Controls.Add(button_createAccount);
         }
 
-        private void BuildProfileTab()
+        // Change Vehicle details
+        private void BuildAddVehiclePanel()
         {
-            panel_profile.Controls.Clear();
-
-            Label label_profile = new Label()
+            Panel panel_addVehicle = new Panel
             {
-                Location = new Point(100, 20),
-                AutoSize = true,
-                Text = "Profile",
-                Font = new Font("Segoe UI", 14, FontStyle.Bold),
-            };
-            panel_profile.Controls.Add(label_profile);
-
-            flowLayoutPanel_profile = new FlowLayoutPanel()
-            {
-                Size = new Size(panel_status.Width, 400),
-                Location = new Point(Left, 45),
+                Size = new Size(panel_profile.Width, panel_profile.Height),
+                Location = new Point(0, 0),
                 BackColor = Color.White,
+                Visible = true
+            };
+            panel_profile.Controls.Add(panel_addVehicle);
+            panel_addVehicle.BringToFront();
+
+            Label label_header = new Label()
+            {
+                Text = "Update Vehicle Information",
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                Location = new Point(10, 20),
+                AutoSize = true
+            };
+            panel_addVehicle.Controls.Add(label_header);
+
+            FlowLayoutPanel flowFields = new FlowLayoutPanel()
+            {
+                Size = new Size(285, 260),
+                Location = new Point(30, 70),
                 FlowDirection = FlowDirection.TopDown,
                 AutoScroll = true,
                 WrapContents = false,
+                BackColor = Color.White
             };
-            panel_profile.Controls.Add(flowLayoutPanel_profile);
+            panel_addVehicle.Controls.Add(flowFields);
 
-            PictureBox profilePic = new PictureBox
+            ComboBox comboBox_carType = new ComboBox()
             {
-                Size = new Size(100, 100),
-                Image = Image.FromFile("icons\\6422378-200.png"),
-                SizeMode = PictureBoxSizeMode.StretchImage,
-                BackColor = Color.Transparent,
-                Margin = new Padding(80, 10, 0, 0),
-                Cursor = Cursors.Hand,
-            };
-            profilePic.Click += profilePic_Click;
-            flowLayoutPanel_profile.Controls.Add(profilePic);
-
-            label_fullName = new Label
-            {
-                Text = "FirstName LastName",
-                Font = new Font("Segoe UI", 14, FontStyle.Bold),
-                AutoSize = true,
-                ForeColor = Color.Black,
-                Location = new Point(70, 130),
-                TextAlign = ContentAlignment.MiddleCenter,
-                Margin = new Padding(60, 0, 0, 0)
-            };
-            label_fullName.Left = (panel_profile.Width - label_fullName.Width) / 2;
-            flowLayoutPanel_profile.Controls.Add(label_fullName);
-
-            label_profileEmail = new Label
-            {
-                Text = "you@example.com",
-                AutoSize = true,
-                Font = new Font("Segoe UI", 10, FontStyle.Regular),
-                ForeColor = Color.Gray,
-                Location = new Point((panel_profile.Width - 200) / 2, 165),
-                TextAlign = ContentAlignment.MiddleCenter,
-                Margin = new Padding(60, 0, 0, 0)
-            };
-            label_profileEmail.Left = (panel_profile.Width - label_profileEmail.Width) / 2;
-            flowLayoutPanel_profile.Controls.Add(label_profileEmail);
-
-            Panel divider = new Panel
-            {
-                BackColor = Color.LightGray,
-                Height = 1,
                 Width = 200,
-                Location = new Point(20, 200),
-                Margin = new Padding(30, 5, 5, 10)
+                DropDownStyle = ComboBoxStyle.DropDownList,
             };
-            flowLayoutPanel_profile.Controls.Add(divider);
+            comboBox_carType.Items.Add("Select Vehicle Type");
+            comboBox_carType.Items.Add("Electric Vehicle");
+            comboBox_carType.Items.Add("Hybrid Vehicle");
+            comboBox_carType.Items.Add("Gas/Fuel Vehicle");
+            comboBox_carType.SelectedIndex = 0;
 
-            label_vehicleType = new Label
-            {
-                Text = "Vehicle Type: (ex: Hybrid)",
-                AutoSize = true,
-                Font = new Font("Segoe UI", 10, FontStyle.Regular),
-                Location = new Point(50, 230),
-                Margin = new Padding(40, 0, 0, 0)
-            };
-            flowLayoutPanel_profile.Controls.Add(label_vehicleType);
+            // Input fields
+            TextBox textBox_make = new TextBox() { Width = 200, PlaceholderText = "Make" };
+            TextBox textBox_model = new TextBox() { Width = 200, PlaceholderText = "Model" };
+            TextBox textBox_year = new TextBox() { Width = 200, PlaceholderText = "Year" };
+            TextBox textBox_vin = new TextBox() { Width = 200, PlaceholderText = "VIN" };
 
-            label_profileVin = new Label
+            flowFields.Controls.AddRange(new Control[]
             {
-                Text = "VIN: 1HGBH41JXMN109186",
-                AutoSize = true,
-                Font = new Font("Segoe UI", 10, FontStyle.Regular),
-                Location = new Point(50, 260),
-                Margin = new Padding(40, 0, 0, 0)
-            };
-            flowLayoutPanel_profile.Controls.Add(label_profileVin);
+                new Label() { Text = "Make:", Font = new Font("Segoe UI", 10) }, textBox_make,
+                new Label() { Text = "Model:", Font = new Font("Segoe UI", 10) }, textBox_model,
+                new Label() { Text = "Year:", Font = new Font("Segoe UI", 10) }, textBox_year,
+                new Label() { Text = "VIN:", Font = new Font("Segoe UI", 10) }, textBox_vin,
+                 new Label() { Text = "Car Type:", Font = new Font("Segoe UI", 10) }, comboBox_carType
+            });
 
-            Panel divider2 = new Panel
+            Button button_save = new Button()
             {
-                BackColor = Color.LightGray,
-                Height = 1,
-                Width = 200,
-                Margin = new Padding(30, 5, 5, 10)
-            };
-            flowLayoutPanel_profile.Controls.Add(divider2);
-
-            button_addVehicle = new Button
-            {
-                Text = "Add Vehicle?",
-                Width = 200,
-                Height = 45,
-                BackColor = Color.Orange,
-                ForeColor = Color.Black,
-                FlatStyle = FlatStyle.Flat,
+                Text = "Save Vehicle",
+                Width = 180,
+                Height = 40,
+                BackColor = Color.MediumPurple,
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                Margin = new Padding(30, 0, 0, 0)
+                Location = new Point(45, 350)
             };
-            button_addVehicle.FlatAppearance.BorderSize = 2;
-            button_addVehicle.FlatAppearance.BorderColor = Color.Black;
-            CornerRadius(button_addVehicle, 10);
-            //button_saveChanges.Click += Button_saveChanges_Click;
-            flowLayoutPanel_profile.Controls.Add(button_addVehicle);
+            CornerRadius(button_save, 10);
 
-            button_removeVehicle = new Button
+            button_save.Click += (s, e) =>
             {
-                Text = "Remove Vehicle?",
-                Width = 200,
-                Height = 45,
-                BackColor = Color.OrangeRed,
-                ForeColor = Color.Black,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                Margin = new Padding(30, 5, 0, 0)
+                if (string.IsNullOrWhiteSpace(textBox_make.Text) ||
+                    string.IsNullOrWhiteSpace(textBox_model.Text) ||
+                    string.IsNullOrWhiteSpace(textBox_year.Text) ||
+                    string.IsNullOrWhiteSpace(textBox_vin.Text))
+                {
+                    ShowNotification("Please fill in all fields.", "stop");
+                    return;
+                }
+
+                if (!int.TryParse(textBox_year.Text, out int year))
+                {
+                    ShowNotification("Year must be a number.", "stop");
+                    return;
+                }
+
+                if (textBox_vin.Text.Length < 17 || textBox_vin.Text.Length > 17)
+                {
+                    ShowNotification("Vin must be exactly 17 characters.", "stop");
+                    return;
+                }
+
+                if (comboBox_carType.SelectedIndex == 0)
+                {
+                    ShowNotification("Please select a vehicle type.", "stop");
+                    return;
+                }
+
+                using (var connection = new SqliteConnection("Data Source=carstarter.db"))
+                {
+                    connection.Open();
+
+                    // Delete any old record for this user
+                    var deleteCmd = connection.CreateCommand();
+                    deleteCmd.CommandText = "DELETE FROM VehicleLog WHERE UserId = $UserId;";
+                    deleteCmd.Parameters.AddWithValue("$UserId", Session.CurrentUserID);
+                    deleteCmd.ExecuteNonQuery();
+
+                    // Generate random values for status tab
+                    Random rand = new Random();
+                    string tirePressure = rand.Next(30, 36) + " PSI";
+                    string oilLevel = rand.Next(0, 2) == 0 ? "Good" : "Needs Change";
+                    string batteryLife = rand.Next(80, 101) + "%";
+                    int miles = rand.Next(1000, 100000);
+                    int engineTemp = rand.Next(70, 120);
+                    int internalTemp = rand.Next(18, 30);
+
+                    // Insert new vehicle info
+                    var insertCmd = connection.CreateCommand();
+                    insertCmd.CommandText = @"
+                        INSERT INTO VehicleLog (Make, Model, Year, UserId, TirePressure, OilLevel, BatteryLife, Miles, EngineTmp, InternalTmp)
+                        VALUES ($Make, $Model, $Year, $UserId, $TirePressure, $OilLevel, $BatteryLife, $Miles, $EngineTmp, $InternalTmp);";
+
+                    insertCmd.Parameters.AddWithValue("$Make", textBox_make.Text);
+                    insertCmd.Parameters.AddWithValue("$Model", textBox_model.Text);
+                    insertCmd.Parameters.AddWithValue("$Year", year);
+                    insertCmd.Parameters.AddWithValue("$UserId", Session.CurrentUserID);
+                    insertCmd.Parameters.AddWithValue("$TirePressure", tirePressure);
+                    insertCmd.Parameters.AddWithValue("$OilLevel", oilLevel);
+                    insertCmd.Parameters.AddWithValue("$BatteryLife", batteryLife);
+                    insertCmd.Parameters.AddWithValue("$Miles", miles);
+                    insertCmd.Parameters.AddWithValue("$EngineTmp", engineTemp);
+                    insertCmd.Parameters.AddWithValue("$InternalTmp", internalTemp);
+                    insertCmd.ExecuteNonQuery();
+
+                    // Update VIN and CarType in Users table
+                    var updateUser = connection.CreateCommand();
+                    updateUser.CommandText = @"
+                        UPDATE Users
+                        SET Vin = $Vin, CarType = $CarType
+                        WHERE UserId = $UserId;";
+                    updateUser.Parameters.AddWithValue("$Vin", textBox_vin.Text);
+                    updateUser.Parameters.AddWithValue("$CarType", comboBox_carType.SelectedItem.ToString());
+                    updateUser.Parameters.AddWithValue("$UserId", Session.CurrentUserID);
+                    updateUser.ExecuteNonQuery();
+                }
+                flowLayoutPanel_vehicleStatus.Controls.Clear();
+                LoadVehicleStatus();
+
+                LoadProfileStatus();
+
+
+                panel_addVehicle.Dispose();
+                flowLayoutPanel_profile.Visible = true;
+
+                ShowNotification("Vehicle info updated!", "success");
+
+                // Refresh the UI
+                flowLayoutPanel_vehicleStatus.Controls.Clear();
+                LoadVehicleStatus();
+                LoadProfileStatus();
+                LoadProfileStatus();
+
+                // Close the panel and go back
+                panel_addVehicle.Dispose();
+                flowLayoutPanel_profile.Visible = true;
             };
-            button_removeVehicle.FlatAppearance.BorderSize = 2;
-            button_removeVehicle.FlatAppearance.BorderColor = Color.Black;
-            CornerRadius(button_removeVehicle, 10);
-            //button_saveChanges.Click += Button_saveChanges_Click;
-            flowLayoutPanel_profile.Controls.Add(button_removeVehicle);
 
+            panel_addVehicle.Controls.Add(button_save);
+        }
 
-
-            Button button_logout = new Button
-            {
-                Text = "Log Out",
-                Size = new Size(200, 40),
-                Location = new Point((panel_profile.Width - 200) / 2, 370),
-                BackColor = Color.Red,
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                Margin = new Padding(30, 30, 0, 0)
-            };
-            button_logout.FlatAppearance.BorderSize = 2;
-            button_logout.FlatAppearance.BorderColor = Color.Black;
-            CornerRadius(button_logout, 10);
-            button_logout.Click += (s, e) =>
-            {
-                Session.CurrentUserID = -1;
-                flowLayoutPanel_profile.Visible = false;
-                panel_editProfile?.Dispose();
-                editProfileBuilt = false; 
-                BuildLoginPanel();
-            };
-            flowLayoutPanel_profile.Controls.Add(button_logout);
-
-            LoadProfileStatus();
+        private void button_editVehicle_click(object sender, EventArgs e)
+        {
+            flowLayoutPanel_profile.Visible = false;
+            BuildAddVehiclePanel();
         }
 
         // ^^^^^^ END ^^^^^^ //

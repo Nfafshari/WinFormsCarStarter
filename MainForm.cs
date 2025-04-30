@@ -1199,6 +1199,20 @@ namespace WinFormsCarStarter
                             InsertFakeActivities();
                             InsertRandomVehicleData(Session.CurrentUserID);
                             InsertFakeTrips();
+
+                            LoadProfileStatus();
+                            flowLayoutPanel_profile.Visible = true;
+                            editProfileBuilt = false;
+
+                            flowlayoutPanel_activities.Controls.Clear();
+                            LoadActivityLogs();
+
+                            flowLayoutPanel_trips.Controls.Clear();
+                            LoadTrips();
+
+                            flowLayoutPanel_vehicleStatus.Controls.Clear();
+                            LoadVehicleStatus();
+
                         }
 
                         ShowTab(panel_home);
@@ -1208,6 +1222,9 @@ namespace WinFormsCarStarter
                         ActiveTab(button_home);
                         ShowNotification($"Welcome {textBox_firstName.Text}, to Piper Autostart!", "success");
                         panel_startUp.Visible = false;
+                        LoadProfileStatus();
+                        flowLayoutPanel_profile.Visible = true;
+                        editProfileBuilt = false;  // Reset in case user clicks profile pic
                     }
                     catch (SqliteException ex)
                     {
@@ -2229,6 +2246,8 @@ namespace WinFormsCarStarter
             button_login.FlatAppearance.BorderColor = Color.Black;
             CornerRadius(button_login, 10);
 
+            
+
             // Login click event
             button_login.Click += (s, e) =>
             {
@@ -2249,18 +2268,26 @@ namespace WinFormsCarStarter
                     if (result != null)
                     {
                         Session.CurrentUserID = Convert.ToInt32(result);
-
                         panel_login.Dispose();
+
                         ShowTab(panel_home);
                         ActiveTab(button_home);
                         panel1.Visible = true;
                         panel2.Visible = true;
 
-                        // Fix part:
                         flowLayoutPanel_profile.Visible = true;
-                        panel_editProfile?.Dispose();
                         LoadProfileStatus();
-                        BuildProfileTab();
+                        editProfileBuilt = false;
+
+                        flowlayoutPanel_activities.Controls.Clear();
+                        LoadActivityLogs();
+
+                        flowLayoutPanel_trips.Controls.Clear();
+                        LoadTrips();
+
+                        flowLayoutPanel_vehicleStatus.Controls.Clear();
+                        LoadVehicleStatus();
+
                         ShowNotification("Login successful!", "success");
                     }
                     else
@@ -2288,9 +2315,18 @@ namespace WinFormsCarStarter
 
             button_createAccount.Click += (s, e) =>
             {
-                panel_login.Dispose();             // hide login panel
+                panel_login.Dispose();
                 panel1.Visible= false;
-                ShowTab(panel_startUp);           // this hides all other tabs and only shows signup
+
+                textBox_firstName.Text = "";
+                textBox_lastName.Text = "";
+                textBox_email.Text = "";
+                textBox_password.Text = "";
+                textBox_vin.Text = "";
+                comboBox_vehicleType.SelectedIndex = 0;
+
+                // Show sign-up panel
+                ShowTab(panel_startUp);
             };
 
             panel_login.Controls.Add(button_createAccount);
@@ -2452,6 +2488,7 @@ namespace WinFormsCarStarter
                 Session.CurrentUserID = -1;
                 flowLayoutPanel_profile.Visible = false;
                 panel_editProfile?.Dispose();
+                editProfileBuilt = false; 
                 BuildLoginPanel();
             };
             flowLayoutPanel_profile.Controls.Add(button_logout);

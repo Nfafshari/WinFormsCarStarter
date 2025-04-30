@@ -23,6 +23,7 @@ namespace WinFormsCarStarter
         private int collapsedTop;
         private int expandedTop;
         private int UserId;
+        private bool editProfileBuilt = false;
 
         // Main Functionality Tab Setup
         private Button button_profile = new Button();
@@ -80,9 +81,11 @@ namespace WinFormsCarStarter
         private Label label_vehicleType = new Label();
         private TextBox textBox_profileFirstName;
         private TextBox textBox_profileLastName;
+        private TextBox textBox_profileEmail;
         private Button button_addVehicle;
         private Button button_removeVehicle;
         private Button button_changePassword;
+        private Button button_profileSaveChanges;
 
 
         public MainForm()
@@ -910,6 +913,7 @@ namespace WinFormsCarStarter
                 ForeColor = Color.Black,
                 Location = new Point(70, 130),
                 TextAlign = ContentAlignment.MiddleCenter,
+                Margin = new Padding(60, 0, 0, 0)
             };
             label_fullName.Left = (panel_profile.Width - label_fullName.Width) / 2;
             flowLayoutPanel_profile.Controls.Add(label_fullName);
@@ -922,6 +926,7 @@ namespace WinFormsCarStarter
                 ForeColor = Color.Gray,
                 Location = new Point((panel_profile.Width - 200) / 2, 165),
                 TextAlign = ContentAlignment.MiddleCenter,
+                Margin = new Padding(60, 0, 0, 0)
             };
             label_profileEmail.Left = (panel_profile.Width - label_profileEmail.Width) / 2;
             flowLayoutPanel_profile.Controls.Add(label_profileEmail);
@@ -931,7 +936,8 @@ namespace WinFormsCarStarter
                 BackColor = Color.LightGray,
                 Height = 1,
                 Width = 200,
-                Location = new Point((panel_profile.Width - 200) / 2, 200),
+                Location = new Point(20, 200),
+                Margin = new Padding(30, 5, 5, 10)
             };
             flowLayoutPanel_profile.Controls.Add(divider);
 
@@ -955,7 +961,14 @@ namespace WinFormsCarStarter
             };
             flowLayoutPanel_profile.Controls.Add(label_profileVin);
 
-            flowLayoutPanel_profile.Controls.Add(divider);
+            Panel divider2 = new Panel
+            {
+                BackColor = Color.LightGray,
+                Height = 1,
+                Width = 200,
+                Margin = new Padding(30, 5, 5, 10)
+            };
+            flowLayoutPanel_profile.Controls.Add(divider2);
 
             button_addVehicle = new Button
             {
@@ -966,12 +979,13 @@ namespace WinFormsCarStarter
                 ForeColor = Color.Black,
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Margin = new Padding(30, 0, 0, 0)
             };
             button_addVehicle.FlatAppearance.BorderSize = 2;
             button_addVehicle.FlatAppearance.BorderColor = Color.Black;
             CornerRadius(button_addVehicle, 10);
             //button_saveChanges.Click += Button_saveChanges_Click;
-            flowLayoutPanel_profile.Controls.Add(button_saveChanges);
+            flowLayoutPanel_profile.Controls.Add(button_addVehicle);
 
             button_removeVehicle = new Button
             {
@@ -982,12 +996,13 @@ namespace WinFormsCarStarter
                 ForeColor = Color.Black,
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Margin = new Padding(30, 5, 0, 0)
             };
-            button_addVehicle.FlatAppearance.BorderSize = 2;
-            button_addVehicle.FlatAppearance.BorderColor = Color.Black;
-            CornerRadius(button_addVehicle, 10);
+            button_removeVehicle.FlatAppearance.BorderSize = 2;
+            button_removeVehicle.FlatAppearance.BorderColor = Color.Black;
+            CornerRadius(button_removeVehicle, 10);
             //button_saveChanges.Click += Button_saveChanges_Click;
-            flowLayoutPanel_profile.Controls.Add(button_saveChanges);
+            flowLayoutPanel_profile.Controls.Add(button_removeVehicle);
 
 
 
@@ -1544,11 +1559,19 @@ namespace WinFormsCarStarter
             };
             panel_status.Controls.Add(panel_editVehicle);
 
+            Label label_editVehicle = new Label
+            {
+                Text = "Edit Vehicle",
+                Location = new Point(70, 20),
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                AutoSize = true,
+            };
+
             // Create FlowLayoutPanel inside panel_editVehicle
             FlowLayoutPanel flowLayout_editFields = new FlowLayoutPanel()
             {
-                Size = new Size(panel_editVehicle.Width, 350),
-                Location = new Point(Left, 30),
+                Size = new Size(285, 300),
+                Location = new Point(20, 60),
                 FlowDirection = FlowDirection.TopDown,
                 WrapContents = false,
                 AutoScroll = true,
@@ -1802,7 +1825,7 @@ namespace WinFormsCarStarter
         // *********************************************** PROFILE TAB METHODS ************************************************ //
         private void LoadProfileStatus()
         {
-            //flowLayoutPanel_vehicleStatus.Controls.Clear(); 
+            flowLayoutPanel_vehicleStatus.Controls.Clear(); 
 
             using (var connection = new SqliteConnection("Data Source=carstarter.db"))
             {
@@ -1832,24 +1855,33 @@ namespace WinFormsCarStarter
 
         private void profilePic_Click(object sender, EventArgs e)
         {
-            BuildEditProfilePanel();
+            if (!editProfileBuilt)
+            {
+                BuildEditProfilePanel();
+                editProfileBuilt = true;
+            }
+
+            flowLayoutPanel_profile.Visible = false;
+            panel_editProfile.Visible = true;
+            panel_editProfile.BringToFront(); 
         }
 
         private void BuildEditProfilePanel()
         {
             panel_editProfile = new Panel
             {
-                Size = new Size(panel_status.Width, panel_status.Height),
+                Size = new Size(panel_profile.Width, panel_profile.Height),
                 Location = new Point(0, 0),
                 BackColor = Color.White,
-                Visible = false
+                Visible = true
             };
             panel_profile.Controls.Add(panel_editProfile);
+            panel_editProfile.BringToFront();
 
             Label label_editProfile = new Label()
             {
                 Text = "Edit Profile Details",
-                Location = new Point(70, 20),
+                Location = new Point(50, 20),
                 Font = new Font("Segoe UI", 14, FontStyle.Bold),
                 AutoSize = true
             };
@@ -1859,8 +1891,8 @@ namespace WinFormsCarStarter
             // Create FlowLayoutPanel inside panel_editVehicle
             FlowLayoutPanel flowLayout_editFields = new FlowLayoutPanel()
             {
-                Size = new Size(panel_editVehicle.Width, 350),
-                Location = new Point(Left, 30),
+                Size = new Size(285, 200),
+                Location = new Point(50, 100),
                 FlowDirection = FlowDirection.TopDown,
                 WrapContents = false,
                 AutoScroll = true,
@@ -1874,15 +1906,16 @@ namespace WinFormsCarStarter
                 Label label = new Label
                 {
                     Text = labelText,
-                    Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                    Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                    Margin = new Padding(5, 0, 0, 5),
                     AutoSize = true,
                 };
 
                 textBox = new TextBox
                 {
-                    Width = 100,
+                    Width = 150,
                     Font = new Font("Segoe UI", 10, FontStyle.Regular),
-                    Margin = new Padding(10, 0, 0, 5)
+                    Margin = new Padding(5, 0, 0, 5)
                 };
 
                 flowLayout_editFields.Controls.Add(label);
@@ -1890,33 +1923,32 @@ namespace WinFormsCarStarter
             }
 
             AddField("Update First Name:", ref textBox_profileFirstName);
-            AddField("Update Last Namme:", ref textBox_profileLastName);
+            AddField("Update Last Name:", ref textBox_profileLastName);
+            AddField("Update Email:", ref textBox_profileEmail);
 
             button_changePassword = new Button
             {
                 Text = "Change Password?",
-                Width = 100,
-                Height = 45,
-                BackColor = Color.MediumPurple,
+                Width = 150,
+                Height = 25,
+                BackColor = Color.LightSkyBlue,
                 ForeColor = Color.Black,
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI", 8, FontStyle.Bold),
-                Margin = new Padding(40, 3, 0, 25)
+                Margin = new Padding(5, 3, 0, 25)
             };
             button_changePassword.FlatAppearance.BorderSize = 2;
             button_changePassword.FlatAppearance.BorderColor = Color.Black;
             CornerRadius(button_changePassword, 10);
             button_changePassword.Click += Button_changePassword_Click;
 
-            flowLayout_editFields.Controls.Add(button_saveChanges);
-
-            
+            flowLayout_editFields.Controls.Add(button_changePassword); 
 
             // Save Changes Button
-            button_saveChanges = new Button
+            button_profileSaveChanges = new Button
             {
                 Text = "Save Changes?",
-                Location = new Point(20, 380),
+                Location = new Point(30, 380),
                 Width = 200,
                 Height = 45,
                 BackColor = Color.MediumPurple,
@@ -1924,12 +1956,39 @@ namespace WinFormsCarStarter
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
             };
-            button_saveChanges.FlatAppearance.BorderSize = 2;
-            button_saveChanges.FlatAppearance.BorderColor = Color.Black;
-            CornerRadius(button_saveChanges, 10);
-            button_saveChanges.Click += Button_saveChanges_Click;
+            button_profileSaveChanges.FlatAppearance.BorderSize = 2;
+            button_profileSaveChanges.FlatAppearance.BorderColor = Color.Black;
+            CornerRadius(button_profileSaveChanges, 10);
+            button_profileSaveChanges.Click += Button_profileSaveChanges_Click;
 
-            flowLayout_editFields.Controls.Add(button_saveChanges);
+            panel_editProfile.Controls.Add(button_profileSaveChanges);
+            LoadProfileFields();
+        }
+
+        private void LoadProfileFields()
+        {
+            using (var connection = new SqliteConnection("Data Source=carstarter.db"))
+            {
+                connection.Open();
+
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                    SELECT FirstName, LastName, Email
+                    FROM Users
+                    WHERE UserId = $UserId
+                    LIMIT 1;";
+                command.Parameters.AddWithValue("$UserId", Session.CurrentUserID);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        textBox_profileFirstName.Text = reader.GetString(0);
+                        textBox_profileLastName.Text = reader.GetString(1);
+                        textBox_profileEmail.Text = reader.GetString(2);
+                    }
+                }
+            }
         }
 
         private void Button_changePassword_Click(object sender, EventArgs e)
@@ -1959,9 +2018,55 @@ namespace WinFormsCarStarter
 
             Label current_Pass = new Label()
             {
-
+                Text = "Current Password:",
+                Location = new Point(70, 200),
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                AutoSize = true
             };
+            panel_editPass.Controls.Add(current_Pass);
         }
+
+        private void Button_profileSaveChanges_Click(object sender, EventArgs e)
+        {
+            string updatedFirstName = textBox_profileFirstName.Text.Trim();
+            string updatedLastName = textBox_profileLastName.Text.Trim();
+            string updatedEmail = textBox_profileEmail.Text.Trim();
+
+            if (string.IsNullOrEmpty(updatedFirstName) || string.IsNullOrEmpty(updatedLastName))
+            {
+                ShowNotification("Please enter both First and Last name.", "stop");
+                return;
+            }
+
+            using (var connection = new SqliteConnection("Data Source=carstarter.db"))
+            {
+                connection.Open();
+
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                    UPDATE Users
+                    SET FirstName = $FirstName, LastName = $LastName, Email = $Email
+                    WHERE UserId = $UserId;";
+
+                command.Parameters.AddWithValue("$FirstName", updatedFirstName);
+                command.Parameters.AddWithValue("$LastName", updatedLastName);
+                command.Parameters.AddWithValue("$Email", updatedEmail);
+                command.Parameters.AddWithValue("$UserId", Session.CurrentUserID);
+
+                command.ExecuteNonQuery();
+            }
+
+            ShowNotification("Profile updated successfully!", "success");
+
+            // Refresh the profile tab
+            LoadProfileStatus();
+
+            // Hide edit panel and go back to main profile view
+            panel_editProfile.Visible = false;
+            flowLayoutPanel_profile.Visible = true;
+        }
+
+
 
         /*
         private void LoadVehicleDataIntoEditFields()

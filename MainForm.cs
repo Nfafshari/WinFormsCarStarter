@@ -1020,10 +1020,14 @@ namespace WinFormsCarStarter
             button_logout.FlatAppearance.BorderSize = 2;
             button_logout.FlatAppearance.BorderColor = Color.Black;
             CornerRadius(button_logout, 10);
+            button_logout.Click += (s, e) =>
+            {
+                Session.CurrentUserID = -1;
+                flowLayoutPanel_profile.Visible = false;
+                panel_editProfile?.Dispose();
+                BuildLoginPanel();
+            };
             flowLayoutPanel_profile.Controls.Add(button_logout);
-
-
-
         }
 
 
@@ -1203,7 +1207,7 @@ namespace WinFormsCarStarter
                         panel2.Visible = true;
                         ActiveTab(button_home);
                         ShowNotification($"Welcome {textBox_firstName.Text}, to Piper Autostart!", "success");
-                        panel_startUp.Dispose();
+                        panel_startUp.Visible = false;
                     }
                     catch (SqliteException ex)
                     {
@@ -2156,8 +2160,304 @@ namespace WinFormsCarStarter
         }
 
 
+        // ****************** LOGOUT FUNCTIONALITY ***************** //
+        private void BuildLoginPanel()
+        {
+            Panel panel_login = new Panel()
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.White
+            };
 
-        
+            this.Controls.Add(panel_login);
+            panel_login.BringToFront();
+
+            Label label_loginHeader = new Label()
+            {
+                Text = "Welcome back!",
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                Location = new Point(80, 20),
+                AutoSize = true
+            };
+            panel_login.Controls.Add(label_loginHeader);
+
+            Label label_email = new Label()
+            {
+                Text = "Email:",
+                Location = new Point(40, 70),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 10)
+            };
+            panel_login.Controls.Add(label_email);
+
+            TextBox textBox_loginEmail = new TextBox()
+            {
+                Location = new Point(40, 95),
+                Width = 200
+            };
+            panel_login.Controls.Add(textBox_loginEmail);
+
+            Label label_password = new Label()
+            {
+                Text = "Password:",
+                Location = new Point(40, 130),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 10)
+            };
+            panel_login.Controls.Add(label_password);
+
+            TextBox textBox_loginPassword = new TextBox()
+            {
+                Location = new Point(40, 155),
+                Width = 200,
+                UseSystemPasswordChar = true
+            };
+            panel_login.Controls.Add(textBox_loginPassword);
+
+            Button button_login = new Button()
+            {
+                Text = "Login",
+                Location = new Point(70, 200),
+                Width = 150,
+                Height = 40,
+                BackColor = Color.MediumPurple,
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                FlatStyle = FlatStyle.Flat
+            };
+            button_login.FlatAppearance.BorderSize = 2;
+            button_login.FlatAppearance.BorderColor = Color.Black;
+            CornerRadius(button_login, 10);
+
+            // Login click event
+            button_login.Click += (s, e) =>
+            {
+                string email = textBox_loginEmail.Text.Trim();
+                string password = textBox_loginPassword.Text.Trim();
+
+                using (var connection = new SqliteConnection("Data Source=carstarter.db"))
+                {
+                    connection.Open();
+                    var command = connection.CreateCommand();
+                    command.CommandText = @"
+                        SELECT UserId FROM Users 
+                        WHERE Email = $Email AND Password = $Password;";
+                    command.Parameters.AddWithValue("$Email", email);
+                    command.Parameters.AddWithValue("$Password", password);
+
+                    var result = command.ExecuteScalar();
+                    if (result != null)
+                    {
+                        Session.CurrentUserID = Convert.ToInt32(result);
+
+                        panel_login.Dispose();
+                        ShowTab(panel_home);
+                        ActiveTab(button_home);
+                        panel1.Visible = true;
+                        panel2.Visible = true;
+
+                        // Fix part:
+                        flowLayoutPanel_profile.Visible = true;
+                        panel_editProfile?.Dispose();
+                        LoadProfileStatus();
+                        BuildProfileTab();
+                        ShowNotification("Login successful!", "success");
+                    }
+                    else
+                    {
+                        ShowNotification("Invalid email or password.", "stop");
+                    }
+                }
+            };
+
+
+            panel_login.Controls.Add(button_login);
+
+            // Create account prompt
+            Button button_createAccount = new Button()
+            {
+                Text = "Need an account? Click here!",
+                Location = new Point(50, 260),
+                Width = 180,
+                FlatStyle = FlatStyle.Flat,
+                ForeColor = Color.MediumPurple,
+                BackColor = Color.White,
+                Font = new Font("Segoe UI", 8, FontStyle.Underline),
+            };
+            button_createAccount.FlatAppearance.BorderSize = 0;
+
+            button_createAccount.Click += (s, e) =>
+            {
+                panel_login.Dispose();             // hide login panel
+                panel1.Visible= false;
+                ShowTab(panel_startUp);           // this hides all other tabs and only shows signup
+            };
+
+            panel_login.Controls.Add(button_createAccount);
+        }
+
+        private void BuildProfileTab()
+        {
+            panel_profile.Controls.Clear();
+
+            Label label_profile = new Label()
+            {
+                Location = new Point(100, 20),
+                AutoSize = true,
+                Text = "Profile",
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+            };
+            panel_profile.Controls.Add(label_profile);
+
+            flowLayoutPanel_profile = new FlowLayoutPanel()
+            {
+                Size = new Size(panel_status.Width, 400),
+                Location = new Point(Left, 45),
+                BackColor = Color.White,
+                FlowDirection = FlowDirection.TopDown,
+                AutoScroll = true,
+                WrapContents = false,
+            };
+            panel_profile.Controls.Add(flowLayoutPanel_profile);
+
+            PictureBox profilePic = new PictureBox
+            {
+                Size = new Size(100, 100),
+                Image = Image.FromFile("icons\\6422378-200.png"),
+                SizeMode = PictureBoxSizeMode.StretchImage,
+                BackColor = Color.Transparent,
+                Margin = new Padding(80, 10, 0, 0),
+                Cursor = Cursors.Hand,
+            };
+            profilePic.Click += profilePic_Click;
+            flowLayoutPanel_profile.Controls.Add(profilePic);
+
+            label_fullName = new Label
+            {
+                Text = "FirstName LastName",
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                AutoSize = true,
+                ForeColor = Color.Black,
+                Location = new Point(70, 130),
+                TextAlign = ContentAlignment.MiddleCenter,
+                Margin = new Padding(60, 0, 0, 0)
+            };
+            label_fullName.Left = (panel_profile.Width - label_fullName.Width) / 2;
+            flowLayoutPanel_profile.Controls.Add(label_fullName);
+
+            label_profileEmail = new Label
+            {
+                Text = "you@example.com",
+                AutoSize = true,
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                ForeColor = Color.Gray,
+                Location = new Point((panel_profile.Width - 200) / 2, 165),
+                TextAlign = ContentAlignment.MiddleCenter,
+                Margin = new Padding(60, 0, 0, 0)
+            };
+            label_profileEmail.Left = (panel_profile.Width - label_profileEmail.Width) / 2;
+            flowLayoutPanel_profile.Controls.Add(label_profileEmail);
+
+            Panel divider = new Panel
+            {
+                BackColor = Color.LightGray,
+                Height = 1,
+                Width = 200,
+                Location = new Point(20, 200),
+                Margin = new Padding(30, 5, 5, 10)
+            };
+            flowLayoutPanel_profile.Controls.Add(divider);
+
+            label_vehicleType = new Label
+            {
+                Text = "Vehicle Type: (ex: Hybrid)",
+                AutoSize = true,
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                Location = new Point(50, 230),
+                Margin = new Padding(40, 0, 0, 0)
+            };
+            flowLayoutPanel_profile.Controls.Add(label_vehicleType);
+
+            label_profileVin = new Label
+            {
+                Text = "VIN: 1HGBH41JXMN109186",
+                AutoSize = true,
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                Location = new Point(50, 260),
+                Margin = new Padding(40, 0, 0, 0)
+            };
+            flowLayoutPanel_profile.Controls.Add(label_profileVin);
+
+            Panel divider2 = new Panel
+            {
+                BackColor = Color.LightGray,
+                Height = 1,
+                Width = 200,
+                Margin = new Padding(30, 5, 5, 10)
+            };
+            flowLayoutPanel_profile.Controls.Add(divider2);
+
+            button_addVehicle = new Button
+            {
+                Text = "Add Vehicle?",
+                Width = 200,
+                Height = 45,
+                BackColor = Color.Orange,
+                ForeColor = Color.Black,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Margin = new Padding(30, 0, 0, 0)
+            };
+            button_addVehicle.FlatAppearance.BorderSize = 2;
+            button_addVehicle.FlatAppearance.BorderColor = Color.Black;
+            CornerRadius(button_addVehicle, 10);
+            //button_saveChanges.Click += Button_saveChanges_Click;
+            flowLayoutPanel_profile.Controls.Add(button_addVehicle);
+
+            button_removeVehicle = new Button
+            {
+                Text = "Remove Vehicle?",
+                Width = 200,
+                Height = 45,
+                BackColor = Color.OrangeRed,
+                ForeColor = Color.Black,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Margin = new Padding(30, 5, 0, 0)
+            };
+            button_removeVehicle.FlatAppearance.BorderSize = 2;
+            button_removeVehicle.FlatAppearance.BorderColor = Color.Black;
+            CornerRadius(button_removeVehicle, 10);
+            //button_saveChanges.Click += Button_saveChanges_Click;
+            flowLayoutPanel_profile.Controls.Add(button_removeVehicle);
+
+
+
+            Button button_logout = new Button
+            {
+                Text = "Log Out",
+                Size = new Size(200, 40),
+                Location = new Point((panel_profile.Width - 200) / 2, 370),
+                BackColor = Color.Red,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Margin = new Padding(30, 30, 0, 0)
+            };
+            button_logout.FlatAppearance.BorderSize = 2;
+            button_logout.FlatAppearance.BorderColor = Color.Black;
+            CornerRadius(button_logout, 10);
+            button_logout.Click += (s, e) =>
+            {
+                Session.CurrentUserID = -1;
+                flowLayoutPanel_profile.Visible = false;
+                panel_editProfile?.Dispose();
+                BuildLoginPanel();
+            };
+            flowLayoutPanel_profile.Controls.Add(button_logout);
+
+            LoadProfileStatus();
+        }
 
         // ^^^^^^ END ^^^^^^ //
 

@@ -28,6 +28,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="icons\6422378-200.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="icons\active_activity.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

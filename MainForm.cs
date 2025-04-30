@@ -1998,32 +1998,121 @@ namespace WinFormsCarStarter
 
         private void BuildChangePasswordPanel()
         {
-            panel_editPass = new Panel
+            panel_editPass = new Panel()
             {
-                Size = new Size(panel_status.Width, panel_status.Height),
-                Location = new Point(0, 0),
                 BackColor = Color.White,
-                Visible = false
+                Location = new Point(0, 0),
+                Dock = DockStyle.Fill,
+                Visible = false,
             };
             panel_editProfile.Controls.Add(panel_editPass);
-
-            Label label_editPass = new Label()
-            {
-                Text = "Change Password",
-                Location = new Point(70, 20),
-                Font = new Font("Segoe UI", 14, FontStyle.Bold),
-                AutoSize = true
-            };
-            panel_editPass.Controls.Add(label_editPass);
 
             Label current_Pass = new Label()
             {
                 Text = "Current Password:",
-                Location = new Point(70, 200),
-                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                Location = new Point(60, 150),
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
                 AutoSize = true
             };
             panel_editPass.Controls.Add(current_Pass);
+
+            TextBox textBox_currentPass = new TextBox()
+            {
+                Location = new Point(60, 175),
+                Width = 150,
+                UseSystemPasswordChar = true
+            };
+            panel_editPass.Controls.Add(textBox_currentPass);
+
+            Label new_Pass = new Label()
+            {
+                Text = "New Password:",
+                Location = new Point(60, 210),
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                AutoSize = true
+            };
+            panel_editPass.Controls.Add(new_Pass);
+
+            TextBox textBox_newPass = new TextBox()
+            {
+                Location = new Point(60, 230),
+                Width = 150,
+                UseSystemPasswordChar = true
+            };
+            panel_editPass.Controls.Add(textBox_newPass);
+
+            // Save button
+            Button button_savePass = new Button()
+            {
+                Text = "Save Password?",
+                Location = new Point(60, 275),
+                Width = 150,
+                Height = 40,
+                BackColor = Color.MediumPurple,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+            };
+            button_savePass.FlatAppearance.BorderSize = 2;
+            button_savePass.FlatAppearance.BorderColor = Color.Black;
+            CornerRadius(button_savePass, 10);
+            button_savePass.Click += (s, e) =>
+            {
+                ChangePassword(textBox_currentPass.Text.Trim(), textBox_newPass.Text.Trim());
+            };
+            panel_editPass.Controls.Add(button_savePass);
+
+            // Show the panel
+            panel_editPass.Visible = true;
+            panel_editPass.BringToFront();
+        }
+
+        private void ChangePassword(string currentPass, string newPass)
+        {
+            if (string.IsNullOrEmpty(currentPass) || string.IsNullOrEmpty(newPass))
+            {
+                ShowNotification("Both fields are required.", "stop");
+                return;
+            }
+
+            if (newPass.Length < 6)
+            {
+                ShowNotification("New password must be at least 6 characters long.", "stop");
+                return;
+            }
+
+            using (var connection = new SqliteConnection("Data Source=carstarter.db"))
+            {
+                connection.Open();
+
+                var checkCmd = connection.CreateCommand();
+                checkCmd.CommandText = @"
+                    SELECT Password FROM Users
+                    WHERE UserId = $UserId;";
+                checkCmd.Parameters.AddWithValue("$UserId", Session.CurrentUserID);
+
+                string storedPass = checkCmd.ExecuteScalar()?.ToString();
+
+                if (storedPass != currentPass)
+                {
+                    ShowNotification("Current password is incorrect.", "stop");
+                    return;
+                }
+
+                var updateCmd = connection.CreateCommand();
+                updateCmd.CommandText = @"
+                    UPDATE Users
+                    SET Password = $NewPass
+                    WHERE UserId = $UserId;";
+                updateCmd.Parameters.AddWithValue("$NewPass", newPass);
+                updateCmd.Parameters.AddWithValue("$UserId", Session.CurrentUserID);
+
+                updateCmd.ExecuteNonQuery();
+            }
+
+            ShowNotification("Password changed successfully!", "success");
+
+            // Close password panel
+            panel_editPass.Visible = false;
         }
 
         private void Button_profileSaveChanges_Click(object sender, EventArgs e)
@@ -2068,105 +2157,7 @@ namespace WinFormsCarStarter
 
 
 
-        /*
-        private void LoadVehicleDataIntoEditFields()
-        {
-            flowLayoutPanel_vehicleStatus.Controls.Clear();
-
-            using (var connection = new SqliteConnection("Data Source=carstarter.db"))
-            {
-                connection.Open();
-
-                var command = connection.CreateCommand();
-                command.CommandText = @"
-                    SELECT TirePressure, OilLevel, BatteryLife, Miles, EngineTmp, InternalTmp
-                    FROM VehicleLog
-                    WHERE UserId = $UserId
-                    LIMIT 1;";
-
-                command.Parameters.AddWithValue("$UserId", Session.CurrentUserID);
-
-                using (var reader = command.ExecuteReader())
-                {
-                    if (reader.Read())
-                    {
-                        textBox_tirePressure.Text = reader.GetString(0);
-                        textBox_oilLevel.Text = reader.GetString(1);
-                        textBox_batteryLife.Text = reader.GetString(2);
-                        textBox_miles.Text = reader.GetFloat(3).ToString();
-                        textBox_engineTmp.Text = reader.GetInt32(4).ToString();
-                        textBox_internalTmp.Text = reader.GetInt32(5).ToString();
-                    }
-                }
-            }
-        }
-
-        private void Button_saveChanges_Click(object sender, EventArgs e)
-        {
-            if (!float.TryParse(textBox_miles.Text, out float miles))
-            {
-                ShowNotification("Please enter a valid number for Miles.", "stop");
-                return;
-            }
-
-            if (!int.TryParse(textBox_engineTmp.Text, out int engineTemp))
-            {
-                ShowNotification("Please enter a valid integer for Engine Temperature.", "stop");
-                return;
-            }
-
-            if (!int.TryParse(textBox_internalTmp.Text, out int internalTemp))
-            {
-                ShowNotification("Please enter a valid integer for Internal Temperature.", "stop");
-                return;
-            }
-
-            using (var connection = new SqliteConnection("Data Source=carstarter.db"))
-            {
-                connection.Open();
-
-                var command = connection.CreateCommand();
-                command.CommandText = @"
-                UPDATE VehicleLog
-                SET TirePressure = $TirePressure,
-                OilLevel = $OilLevel,
-                BatteryLife = $BatteryLife,
-                Miles = $Miles,
-                EngineTmp = $EngineTmp,
-                InternalTmp = $InternalTmp
-                WHERE UserId = $UserId;";
-
-                command.Parameters.AddWithValue("$TirePressure", textBox_tirePressure.Text);
-                command.Parameters.AddWithValue("$OilLevel", textBox_oilLevel.Text);
-                command.Parameters.AddWithValue("$BatteryLife", textBox_batteryLife.Text);
-                command.Parameters.AddWithValue("$Miles", miles);
-                command.Parameters.AddWithValue("$EngineTmp", engineTemp);
-                command.Parameters.AddWithValue("$InternalTmp", internalTemp);
-                command.Parameters.AddWithValue("$UserId", Session.CurrentUserID);
-
-                command.ExecuteNonQuery();
-            }
-
-            LogActivity("Updated vehicle information.", true);
-
-            ShowNotification("Vehicle information updated successfully!", "Success");
-
-            panel_editVehicle.Visible = false;
-            flowLayoutPanel_vehicleStatus.Visible = true;
-            LoadVehicleStatus(); // Reload updated vehicle info
-        }
-
-
         
-
-
-        private void Button_updateVehicle_Click(object sender, EventArgs e)
-        {
-            LoadVehicleDataIntoEditFields(); // load current values
-            flowLayoutPanel_vehicleStatus.Visible = false;
-            panel_editVehicle.Visible = true;
-        }
-        */
 
         // ^^^^^^ END ^^^^^^ //
 

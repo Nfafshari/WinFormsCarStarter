@@ -72,10 +72,17 @@ namespace WinFormsCarStarter
 
         // Profile Tab Variables
         private FlowLayoutPanel flowLayoutPanel_profile = new FlowLayoutPanel();
+        private Panel panel_editProfile = new Panel();
+        private Panel panel_editPass;
         private Label label_fullName = new Label();
         private Label label_profileEmail = new Label();
         private Label label_profileVin = new Label();
         private Label label_vehicleType = new Label();
+        private TextBox textBox_profileFirstName;
+        private TextBox textBox_profileLastName;
+        private Button button_addVehicle;
+        private Button button_removeVehicle;
+        private Button button_changePassword;
 
 
         public MainForm()
@@ -883,18 +890,18 @@ namespace WinFormsCarStarter
             };
             panel_profile.Controls.Add(flowLayoutPanel_profile);
 
-            // 1. Profile picture
             PictureBox profilePic = new PictureBox
             {
                 Size = new Size(100, 100),
                 Image = Image.FromFile("icons\\6422378-200.png"), 
                 SizeMode = PictureBoxSizeMode.StretchImage,
                 BackColor = Color.Transparent,
-                Margin = new Padding(80, 10 , 0, 0)
+                Margin = new Padding(80, 10 , 0, 0),
+                Cursor = Cursors.Hand,
             };
+            profilePic.Click += profilePic_Click;
             flowLayoutPanel_profile.Controls.Add(profilePic);
 
-            // 2. Full Name label
             label_fullName = new Label
             {
                 Text = "FirstName LastName",
@@ -907,7 +914,6 @@ namespace WinFormsCarStarter
             label_fullName.Left = (panel_profile.Width - label_fullName.Width) / 2;
             flowLayoutPanel_profile.Controls.Add(label_fullName);
 
-            // 3. Email label
             label_profileEmail = new Label
             {
                 Text = "you@example.com",
@@ -920,7 +926,6 @@ namespace WinFormsCarStarter
             label_profileEmail.Left = (panel_profile.Width - label_profileEmail.Width) / 2;
             flowLayoutPanel_profile.Controls.Add(label_profileEmail);
 
-            // 4. Divider Line
             Panel divider = new Panel
             {
                 BackColor = Color.LightGray,
@@ -930,9 +935,6 @@ namespace WinFormsCarStarter
             };
             flowLayoutPanel_profile.Controls.Add(divider);
 
-
-
-            // 5. Car Info labels
             label_vehicleType = new Label
             {
                 Text = "Vehicle Type: (ex: Hybrid)",
@@ -953,9 +955,42 @@ namespace WinFormsCarStarter
             };
             flowLayoutPanel_profile.Controls.Add(label_profileVin);
 
-            
+            flowLayoutPanel_profile.Controls.Add(divider);
 
-            // 7. Log Out Button
+            button_addVehicle = new Button
+            {
+                Text = "Add Vehicle?",
+                Width = 200,
+                Height = 45,
+                BackColor = Color.Orange,
+                ForeColor = Color.Black,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+            };
+            button_addVehicle.FlatAppearance.BorderSize = 2;
+            button_addVehicle.FlatAppearance.BorderColor = Color.Black;
+            CornerRadius(button_addVehicle, 10);
+            //button_saveChanges.Click += Button_saveChanges_Click;
+            flowLayoutPanel_profile.Controls.Add(button_saveChanges);
+
+            button_removeVehicle = new Button
+            {
+                Text = "Remove Vehicle?",
+                Width = 200,
+                Height = 45,
+                BackColor = Color.OrangeRed,
+                ForeColor = Color.Black,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+            };
+            button_addVehicle.FlatAppearance.BorderSize = 2;
+            button_addVehicle.FlatAppearance.BorderColor = Color.Black;
+            CornerRadius(button_addVehicle, 10);
+            //button_saveChanges.Click += Button_saveChanges_Click;
+            flowLayoutPanel_profile.Controls.Add(button_saveChanges);
+
+
+
             Button button_logout = new Button
             {
                 Text = "Log Out",
@@ -975,7 +1010,6 @@ namespace WinFormsCarStarter
 
 
         }
-
 
 
         /************** GLOBAL METHODS *************/
@@ -1796,6 +1830,139 @@ namespace WinFormsCarStarter
             }
         }
 
+        private void profilePic_Click(object sender, EventArgs e)
+        {
+            BuildEditProfilePanel();
+        }
+
+        private void BuildEditProfilePanel()
+        {
+            panel_editProfile = new Panel
+            {
+                Size = new Size(panel_status.Width, panel_status.Height),
+                Location = new Point(0, 0),
+                BackColor = Color.White,
+                Visible = false
+            };
+            panel_profile.Controls.Add(panel_editProfile);
+
+            Label label_editProfile = new Label()
+            {
+                Text = "Edit Profile Details",
+                Location = new Point(70, 20),
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                AutoSize = true
+            };
+            panel_editProfile.Controls.Add(label_editProfile);
+
+
+            // Create FlowLayoutPanel inside panel_editVehicle
+            FlowLayoutPanel flowLayout_editFields = new FlowLayoutPanel()
+            {
+                Size = new Size(panel_editVehicle.Width, 350),
+                Location = new Point(Left, 30),
+                FlowDirection = FlowDirection.TopDown,
+                WrapContents = false,
+                AutoScroll = true,
+                BackColor = Color.White,
+            };
+            panel_editProfile.Controls.Add(flowLayout_editFields);
+
+            // Helper function to add label + textbox vertically
+            void AddField(string labelText, ref TextBox textBox)
+            {
+                Label label = new Label
+                {
+                    Text = labelText,
+                    Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                    AutoSize = true,
+                };
+
+                textBox = new TextBox
+                {
+                    Width = 100,
+                    Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                    Margin = new Padding(10, 0, 0, 5)
+                };
+
+                flowLayout_editFields.Controls.Add(label);
+                flowLayout_editFields.Controls.Add(textBox);
+            }
+
+            AddField("Update First Name:", ref textBox_profileFirstName);
+            AddField("Update Last Namme:", ref textBox_profileLastName);
+
+            button_changePassword = new Button
+            {
+                Text = "Change Password?",
+                Width = 100,
+                Height = 45,
+                BackColor = Color.MediumPurple,
+                ForeColor = Color.Black,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 8, FontStyle.Bold),
+                Margin = new Padding(40, 3, 0, 25)
+            };
+            button_changePassword.FlatAppearance.BorderSize = 2;
+            button_changePassword.FlatAppearance.BorderColor = Color.Black;
+            CornerRadius(button_changePassword, 10);
+            button_changePassword.Click += Button_changePassword_Click;
+
+            flowLayout_editFields.Controls.Add(button_saveChanges);
+
+            
+
+            // Save Changes Button
+            button_saveChanges = new Button
+            {
+                Text = "Save Changes?",
+                Location = new Point(20, 380),
+                Width = 200,
+                Height = 45,
+                BackColor = Color.MediumPurple,
+                ForeColor = Color.Black,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+            };
+            button_saveChanges.FlatAppearance.BorderSize = 2;
+            button_saveChanges.FlatAppearance.BorderColor = Color.Black;
+            CornerRadius(button_saveChanges, 10);
+            button_saveChanges.Click += Button_saveChanges_Click;
+
+            flowLayout_editFields.Controls.Add(button_saveChanges);
+        }
+
+        private void Button_changePassword_Click(object sender, EventArgs e)
+        {
+            BuildChangePasswordPanel();
+        }
+
+        private void BuildChangePasswordPanel()
+        {
+            panel_editPass = new Panel
+            {
+                Size = new Size(panel_status.Width, panel_status.Height),
+                Location = new Point(0, 0),
+                BackColor = Color.White,
+                Visible = false
+            };
+            panel_editProfile.Controls.Add(panel_editPass);
+
+            Label label_editPass = new Label()
+            {
+                Text = "Change Password",
+                Location = new Point(70, 20),
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                AutoSize = true
+            };
+            panel_editPass.Controls.Add(label_editPass);
+
+            Label current_Pass = new Label()
+            {
+
+            };
+        }
+
         /*
         private void LoadVehicleDataIntoEditFields()
         {
@@ -1885,76 +2052,7 @@ namespace WinFormsCarStarter
         }
 
 
-        private void BuildEditVehiclePanel()
-        {
-            panel_editVehicle = new Panel
-            {
-                Size = new Size(panel_status.Width, panel_status.Height),
-                Location = new Point(0, 0),
-                BackColor = Color.White,
-                Visible = false
-            };
-            panel_status.Controls.Add(panel_editVehicle);
-
-            // Create FlowLayoutPanel inside panel_editVehicle
-            FlowLayoutPanel flowLayout_editFields = new FlowLayoutPanel()
-            {
-                Size = new Size(panel_editVehicle.Width, 350),
-                Location = new Point(Left, 30),
-                FlowDirection = FlowDirection.TopDown,
-                WrapContents = false,
-                AutoScroll = true,
-                BackColor = Color.White,
-            };
-            panel_editVehicle.Controls.Add(flowLayout_editFields);
-
-            // Helper function to add label + textbox vertically
-            void AddField(string labelText, ref TextBox textBox)
-            {
-                Label label = new Label
-                {
-                    Text = labelText,
-                    Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                    AutoSize = true,
-                };
-
-                textBox = new TextBox
-                {
-                    Width = 100,
-                    Font = new Font("Segoe UI", 10, FontStyle.Regular),
-                    Margin = new Padding(10, 0, 0, 5)
-                };
-
-                flowLayout_editFields.Controls.Add(label);
-                flowLayout_editFields.Controls.Add(textBox);
-            }
-
-            AddField("Tire Pressure (PSI):", ref textBox_tirePressure);
-            AddField("Oil Level:", ref textBox_oilLevel);
-            AddField("Battery Life (%):", ref textBox_batteryLife);
-            AddField("Miles:", ref textBox_miles);
-            AddField("Engine Temp (°C):", ref textBox_engineTmp);
-            AddField("Internal Temp (°C):", ref textBox_internalTmp);
-
-            // Save Changes Button
-            button_saveChanges = new Button
-            {
-                Text = "Save Changes?",
-                Location = new Point(20, 380),
-                Width = 200,
-                Height = 45,
-                BackColor = Color.MediumPurple,
-                ForeColor = Color.Black,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-            };
-            button_saveChanges.FlatAppearance.BorderSize = 2;
-            button_saveChanges.FlatAppearance.BorderColor = Color.Black;
-            CornerRadius(button_saveChanges, 10);
-            button_saveChanges.Click += Button_saveChanges_Click;
-
-            panel_editVehicle.Controls.Add(button_saveChanges);
-        }
+        
 
 
         private void Button_updateVehicle_Click(object sender, EventArgs e)

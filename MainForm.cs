@@ -939,6 +939,7 @@ namespace WinFormsCarStarter
                 AutoSize = true,
                 Font = new Font("Segoe UI", 10, FontStyle.Regular),
                 Location = new Point(50, 230),
+                Margin = new Padding(40, 0, 0, 0)
             };
             flowLayoutPanel_profile.Controls.Add(label_vehicleType);
 
@@ -948,6 +949,7 @@ namespace WinFormsCarStarter
                 AutoSize = true,
                 Font = new Font("Segoe UI", 10, FontStyle.Regular),
                 Location = new Point(50, 260),
+                Margin = new Padding(40, 0, 0, 0)
             };
             flowLayoutPanel_profile.Controls.Add(label_profileVin);
 
